@@ -25,21 +25,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       async (_event, session) => {
         setSession(session);
 
-        // Check device on session restore (e.g. page reload)
-        if (session) {
-          const deviceToken = localStorage.getItem("device_token");
-          if (deviceToken) {
-            const { data } = await supabase.rpc("check_device", {
-              p_device_token: deviceToken,
-            });
-            if (data && (data as any).status === "blocked") {
-              await supabase.auth.signOut();
-              setSession(null);
+        try {
+          // Check device on session restore (e.g. page reload)
+          if (session) {
+            const deviceToken = localStorage.getItem("device_token");
+            if (deviceToken) {
+              const { data, error } = await supabase.rpc("check_device", {
+                p_device_token: deviceToken,
+              });
+              
+              if (error) {
+                console.error("Erro ao verificar dispositivo:", error);
+              }
+
+              if (data && (data as any).status === "blocked") {
+                await supabase.auth.signOut();
+                setSession(null);
+                alert("Conta bloqueada por acesso em outro dispositivo.");
+              }
             }
           }
+        } catch (err) {
+          console.error("Erro inesperado na verificação de auth:", err);
+        } finally {
+          setLoading(false);
         }
-
-        setLoading(false);
       }
     );
 
