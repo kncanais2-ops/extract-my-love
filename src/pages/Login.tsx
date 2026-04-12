@@ -7,15 +7,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Lock, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-const DEVICE_TOKEN_KEY = "device_token";
-
-function getOrCreateDeviceToken(): string {
-  let token = localStorage.getItem(DEVICE_TOKEN_KEY);
-  if (!token) {
-    token = crypto.randomUUID();
-    localStorage.setItem(DEVICE_TOKEN_KEY, token);
+async function getDeviceIP(): Promise<string> {
+  try {
+    const res = await fetch("https://api64.ipify.org?format=json");
+    const data = await res.json();
+    return data.ip || "unknown-ip";
+  } catch (err) {
+    console.error("Erro ao obter IP:", err);
+    return "unknown-ip";
   }
-  return token;
 }
 
 const Login = () => {
@@ -42,7 +42,7 @@ const Login = () => {
     }
 
     // Check device
-    const deviceToken = getOrCreateDeviceToken();
+    const deviceToken = await getDeviceIP();
     const { data, error: rpcError } = await supabase.rpc("check_device", {
       p_device_token: deviceToken,
     });

@@ -156,7 +156,10 @@ const AdminPanel = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Usuários ({users.length})</CardTitle>
+            <CardTitle className="text-lg">Gerenciamento de Clientes ({users.length})</CardTitle>
+            <CardDescription>
+              O sistema de proteção por IP está ativo! O primeiro IP a logar será registrado e fixado. Se a conta for acessada por um IP diferente, será bloqueada imediatamente!
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Table>

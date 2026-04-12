@@ -28,9 +28,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         try {
           // Check device on session restore (e.g. page reload)
           if (session) {
-            const deviceToken = localStorage.getItem("device_token");
+            const res = await fetch("https://api64.ipify.org?format=json").catch(() => null);
+            const data = res ? await res.json().catch(() => null) : null;
+            const deviceToken = data?.ip || "unknown-ip";
+
             if (deviceToken) {
-              const { data, error } = await supabase.rpc("check_device", {
+              const { data: dbData, error } = await supabase.rpc("check_device", {
                 p_device_token: deviceToken,
               });
               
@@ -38,10 +41,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 console.error("Erro ao verificar dispositivo:", error);
               }
 
-              if (data && (data as any).status === "blocked") {
+              if (dbData && (dbData as any).status === "blocked") {
                 await supabase.auth.signOut();
                 setSession(null);
-                alert("Conta bloqueada por acesso em outro dispositivo.");
+                alert("Conta bloqueada por acesso em outro local/IP.");
               }
             }
           }
