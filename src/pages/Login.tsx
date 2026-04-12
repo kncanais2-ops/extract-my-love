@@ -41,23 +41,6 @@ const Login = () => {
       return;
     }
 
-    // Check device
-    const deviceToken = await getDeviceIP();
-    const { data, error: rpcError } = await supabase.rpc("check_device", {
-      p_device_token: deviceToken,
-    });
-
-    if (rpcError || !data || (data as any).status === "blocked") {
-      await supabase.auth.signOut();
-      toast({
-        title: "Conta bloqueada",
-        description: "Esta conta foi bloqueada por acesso em outro dispositivo.",
-        variant: "destructive",
-      });
-      setLoading(false);
-      return;
-    }
-
     navigate("/");
     setLoading(false);
   };

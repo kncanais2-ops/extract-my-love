@@ -26,28 +26,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setSession(session);
 
         try {
-          // Check device on session restore (e.g. page reload)
-          if (session) {
-            const res = await fetch("https://api64.ipify.org?format=json").catch(() => null);
-            const data = res ? await res.json().catch(() => null) : null;
-            const deviceToken = data?.ip || "unknown-ip";
-
-            if (deviceToken) {
-              const { data: dbData, error } = await supabase.rpc("check_device", {
-                p_device_token: deviceToken,
-              });
-              
-              if (error) {
-                console.error("Erro ao verificar dispositivo:", error);
-              }
-
-              if (dbData && (dbData as any).status === "blocked") {
-                await supabase.auth.signOut();
-                setSession(null);
-                alert("Conta bloqueada por acesso em outro local/IP.");
-              }
-            }
-          }
+          // O sistema de bloqueio foi removido
         } catch (err) {
           console.error("Erro inesperado na verificação de auth:", err);
         } finally {
