@@ -384,6 +384,7 @@ interface PixData {
   valor: string;
   pagador: string;
   cpfPagador: string;
+  cnpjPagador: string;
   recebedor: string;
   cpfRecebedor: string;
   instituicaoPagador: string;
@@ -399,12 +400,35 @@ function generatePixId() {
   return result;
 }
 
+// Máscara para INPUT (mostra tudo enquanto digita)
 function maskCPF(cpf: string) {
   const digits = cpf.replace(/\D/g, "");
   if (digits.length <= 3) return digits;
   if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
   if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
   return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9, 11)}`;
+}
+
+function maskCNPJ(cnpj: string) {
+  const digits = cnpj.replace(/\D/g, "");
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 5) return `${digits.slice(0, 2)}.${digits.slice(2)}`;
+  if (digits.length <= 8) return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5)}`;
+  if (digits.length <= 12) return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}/${digits.slice(8)}`;
+  return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}/${digits.slice(8, 12)}-${digits.slice(12, 14)}`;
+}
+
+// Máscara para PREVIEW (oculta parcialmente como nos bancos)
+function hideCPF(cpf: string) {
+  const digits = cpf.replace(/\D/g, "");
+  if (digits.length < 11) return "***.***.***-**";
+  return `***.${digits.slice(3, 6)}.${digits.slice(6, 9)}-**`;
+}
+
+function hideCNPJ(cnpj: string) {
+  const digits = cnpj.replace(/\D/g, "");
+  if (digits.length < 14) return "**.***.***//****-**";
+  return `**.${digits.slice(2, 5)}.${digits.slice(5, 8)}/${digits.slice(8, 12)}-**`;
 }
 
 function PreviewPixComprovante({ pixData }: { pixData: PixData }) {
@@ -441,8 +465,14 @@ function PreviewPixComprovante({ pixData }: { pixData: PixData }) {
               <span className="text-xs font-medium" style={{ color: "#1a1a1a" }}>{pixData.pagador || "Nome do pagador"}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-xs" style={{ color: "#999" }}>CPF</span>
-              <span className="text-xs font-medium" style={{ color: "#1a1a1a" }}>{maskCPF(pixData.cpfPagador) || "***.***.***-**"}</span>
+              <span className="text-xs" style={{ color: "#999" }}>{pixData.cnpjPagador ? "CNPJ" : "CPF"}</span>
+              <span className="text-xs font-medium" style={{ color: "#1a1a1a" }}>
+                {pixData.cnpjPagador
+                  ? hideCNPJ(pixData.cnpjPagador)
+                  : pixData.cpfPagador
+                  ? hideCPF(pixData.cpfPagador)
+                  : "***.***.***-**"}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-xs" style={{ color: "#999" }}>Instituição</span>
@@ -463,7 +493,9 @@ function PreviewPixComprovante({ pixData }: { pixData: PixData }) {
             </div>
             <div className="flex justify-between">
               <span className="text-xs" style={{ color: "#999" }}>CPF</span>
-              <span className="text-xs font-medium" style={{ color: "#1a1a1a" }}>{maskCPF(pixData.cpfRecebedor) || "***.***.***-**"}</span>
+              <span className="text-xs font-medium" style={{ color: "#1a1a1a" }}>
+                {pixData.cpfRecebedor ? hideCPF(pixData.cpfRecebedor) : "***.***.***-**"}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-xs" style={{ color: "#999" }}>Instituição</span>
@@ -503,6 +535,7 @@ const ExtratoGenerator = ({ showComprovante = false }: { showComprovante?: boole
     valor: "",
     pagador: "",
     cpfPagador: "",
+    cnpjPagador: "",
     recebedor: "",
     cpfRecebedor: "",
     instituicaoPagador: "",
@@ -515,6 +548,7 @@ const ExtratoGenerator = ({ showComprovante = false }: { showComprovante?: boole
     let sanitized = val;
     if (field === "valor") sanitized = val.replace(/\D/g, "").slice(0, 12);
     if (field === "cpfPagador" || field === "cpfRecebedor") sanitized = val.replace(/\D/g, "").slice(0, 11);
+    if (field === "cnpjPagador") sanitized = val.replace(/\D/g, "").slice(0, 14);
     setPixData((prev) => ({ ...prev, [field]: sanitized }));
   };
 
@@ -701,12 +735,20 @@ const ExtratoGenerator = ({ showComprovante = false }: { showComprovante?: boole
                     onChange={(e) => updatePixData("pagador", e.target.value)}
                     className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors"
                   />
-                  <input
-                    type="text" placeholder="CPF do pagador"
-                    value={maskCPF(pixData.cpfPagador)}
-                    onChange={(e) => updatePixData("cpfPagador", e.target.value)}
-                    className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors"
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="text" placeholder="CPF (opcional)"
+                      value={maskCPF(pixData.cpfPagador)}
+                      onChange={(e) => { updatePixData("cpfPagador", e.target.value); if (e.target.value) updatePixData("cnpjPagador", ""); }}
+                      className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors"
+                    />
+                    <input
+                      type="text" placeholder="CNPJ (opcional)"
+                      value={maskCNPJ(pixData.cnpjPagador)}
+                      onChange={(e) => { updatePixData("cnpjPagador", e.target.value); if (e.target.value) updatePixData("cpfPagador", ""); }}
+                      className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors"
+                    />
+                  </div>
                   <input
                     type="text" placeholder="Instituição (ex: Nubank)"
                     value={pixData.instituicaoPagador}
