@@ -22,16 +22,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      (_event, session) => {
         setSession(session);
-
-        try {
-          // O sistema de bloqueio foi removido
-        } catch (err) {
-          console.error("Erro inesperado na verificação de auth:", err);
-        } finally {
-          setLoading(false);
-        }
+        setLoading(false);
       }
     );
 

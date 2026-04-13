@@ -14,6 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      authorized_devices: {
+        Row: {
+          id: string
+          user_id: string
+          fingerprint: string
+          device_label: string | null
+          authorized_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          fingerprint: string
+          device_label?: string | null
+          authorized_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          fingerprint?: string
+          device_label?: string | null
+          authorized_at?: string
+        }
+        Relationships: []
+      }
+      login_logs: {
+        Row: {
+          id: string
+          user_id: string
+          ip_address: string
+          region: string | null
+          city: string | null
+          country: string | null
+          isp: string | null
+          logged_in_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          ip_address: string
+          region?: string | null
+          city?: string | null
+          country?: string | null
+          isp?: string | null
+          logged_in_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          ip_address?: string
+          region?: string | null
+          city?: string | null
+          country?: string | null
+          isp?: string | null
+          logged_in_at?: string
+        }
+        Relationships: []
+      }
       user_devices: {
         Row: {
           created_at: string
