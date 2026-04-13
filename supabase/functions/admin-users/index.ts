@@ -91,11 +91,28 @@ serve(async (req: Request) => {
         .from("authorized_devices")
         .select("user_id, fingerprint, device_label, authorized_at");
 
+      // Busca o último login de cada usuário na tabela login_logs
+      const { data: lastLogins } = await adminClient
+        .from("login_logs")
+        .select("user_id, logged_in_at, ip_address")
+        .order("logged_in_at", { ascending: false });
+
+      // Agrupa por user_id pegando apenas o mais recente
+      const lastLoginMap: Record<string, { logged_in_at: string; ip_address: string }> = {};
+      if (lastLogins) {
+        for (const log of lastLogins) {
+          if (!lastLoginMap[log.user_id]) {
+            lastLoginMap[log.user_id] = { logged_in_at: log.logged_in_at, ip_address: log.ip_address };
+          }
+        }
+      }
+
       const users = data.users.map((u: any) => ({
         id: u.id,
         email: u.email,
         created_at: u.created_at,
-        last_sign_in_at: u.last_sign_in_at || null,
+        last_sign_in_at: lastLoginMap[u.id]?.logged_in_at || u.last_sign_in_at || null,
+        last_ip: lastLoginMap[u.id]?.ip_address || null,
         is_blocked: devices?.find((d: any) => d.user_id === u.id)?.is_blocked ?? false,
         is_admin: roles?.some((r: any) => r.user_id === u.id && r.role === "admin") ?? false,
         has_device: authDevices?.some((d: any) => d.user_id === u.id) ?? false,

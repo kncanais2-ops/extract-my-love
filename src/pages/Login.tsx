@@ -69,22 +69,23 @@ const Login = () => {
     // (re-autentica para garantir sessão fresca)
     await supabase.auth.signOut({ scope: "others" as "global" });
 
-    // 5. Registra o login com IP e localização
-    getGeoIP().then((geo) => {
-      supabase.from("login_logs").insert({
+    // 5. Registra o login com IP e localização (aguarda antes de navegar)
+    try {
+      const geo = await getGeoIP();
+      await supabase.from("login_logs").insert({
         user_id: user.id,
         ip_address: geo.ip,
         region: geo.region,
         city: geo.city,
         country: geo.country,
         isp: geo.isp,
-      }).then(({ error: logError }) => {
-        if (logError) console.error("Erro ao registrar login:", logError);
       });
-    });
+    } catch (geoErr) {
+      console.error("Erro ao registrar login:", geoErr);
+    }
 
-    navigate("/");
     setLoading(false);
+    navigate("/");
   };
 
   return (
