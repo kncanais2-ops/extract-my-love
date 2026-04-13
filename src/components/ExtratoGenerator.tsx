@@ -30,7 +30,7 @@ interface Transaction {
   time: string;
 }
 
-type BankType = "inter" | "neon" | "nubank" | "c6" | "picpay" | "mercadopago" | "efi";
+type BankType = "inter" | "neon" | "nubank" | "c6" | "picpay" | "mercadopago" | "efi" | "pix-comprovante";
 
 const BANKS: { id: BankType; label: string; accent: string; ring: string }[] = [
   { id: "inter", label: "Banco Inter", accent: "#f57c00", ring: "ring-orange-500" },
@@ -40,6 +40,7 @@ const BANKS: { id: BankType; label: string; accent: string; ring: string }[] = [
   { id: "picpay", label: "PicPay", accent: "#21C25E", ring: "ring-green-500" },
   { id: "mercadopago", label: "Mercado Pago", accent: "#009EE3", ring: "ring-blue-500" },
   { id: "efi", label: "Efí Bank", accent: "#F37021", ring: "ring-orange-400" },
+  { id: "pix-comprovante", label: "Comprovante Pix", accent: "#32BCAD", ring: "ring-teal-500" },
 ];
 
 const CATEGORY_OPTIONS = [
@@ -377,6 +378,114 @@ function PreviewEfi({ transactions, dateLabel }: { transactions: Transaction[]; 
   );
 }
 
+/* ── Comprovante Pix preview ────────────────────────────── */
+
+interface PixData {
+  valor: string;
+  pagador: string;
+  cpfPagador: string;
+  recebedor: string;
+  cpfRecebedor: string;
+  instituicaoPagador: string;
+  instituicaoRecebedor: string;
+  dataHora: string;
+  idTransacao: string;
+}
+
+function generatePixId() {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let result = "";
+  for (let i = 0; i < 32; i++) result += chars.charAt(Math.floor(Math.random() * chars.length));
+  return result;
+}
+
+function maskCPF(cpf: string) {
+  const digits = cpf.replace(/\D/g, "");
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
+  if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+  return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9, 11)}`;
+}
+
+function PreviewPixComprovante({ pixData }: { pixData: PixData }) {
+  const valor = parseFloat(pixData.valor.replace(/\D/g, "")) / 100;
+  const valorFormatado = isNaN(valor) ? "R$ 0,00" : `R$ ${valor.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
+
+  return (
+    <div className="px-5 py-6" style={{ backgroundColor: "#ffffff" }}>
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-5">
+        <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: "#32BCAD" }}>
+          <ArrowUpRight size={20} color="#fff" />
+        </div>
+        <div>
+          <p className="text-base font-bold" style={{ color: "#1a1a1a" }}>Pix enviado</p>
+          <p className="text-xs" style={{ color: "#999" }}>{pixData.dataHora || "13/04/2026 - 14:30:00"}</p>
+        </div>
+      </div>
+
+      {/* Valor */}
+      <div className="mb-6 text-center py-4" style={{ borderTop: "1px solid #eee", borderBottom: "1px solid #eee" }}>
+        <p className="text-xs mb-1" style={{ color: "#999" }}>Valor</p>
+        <p className="text-2xl font-bold" style={{ color: "#1a1a1a" }}>{valorFormatado}</p>
+      </div>
+
+      {/* Dados */}
+      <div className="space-y-4">
+        {/* Quem pagou */}
+        <div>
+          <p className="text-xs font-semibold mb-2" style={{ color: "#999" }}>Quem pagou</p>
+          <div className="space-y-1.5">
+            <div className="flex justify-between">
+              <span className="text-xs" style={{ color: "#999" }}>Nome</span>
+              <span className="text-xs font-medium" style={{ color: "#1a1a1a" }}>{pixData.pagador || "Nome do pagador"}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-xs" style={{ color: "#999" }}>CPF</span>
+              <span className="text-xs font-medium" style={{ color: "#1a1a1a" }}>{maskCPF(pixData.cpfPagador) || "***.***.***-**"}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-xs" style={{ color: "#999" }}>Instituição</span>
+              <span className="text-xs font-medium" style={{ color: "#1a1a1a" }}>{pixData.instituicaoPagador || "Banco"}</span>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ borderTop: "1px solid #eee" }} />
+
+        {/* Quem recebeu */}
+        <div>
+          <p className="text-xs font-semibold mb-2" style={{ color: "#999" }}>Quem recebeu</p>
+          <div className="space-y-1.5">
+            <div className="flex justify-between">
+              <span className="text-xs" style={{ color: "#999" }}>Nome</span>
+              <span className="text-xs font-medium" style={{ color: "#1a1a1a" }}>{pixData.recebedor || "Nome do recebedor"}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-xs" style={{ color: "#999" }}>CPF</span>
+              <span className="text-xs font-medium" style={{ color: "#1a1a1a" }}>{maskCPF(pixData.cpfRecebedor) || "***.***.***-**"}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-xs" style={{ color: "#999" }}>Instituição</span>
+              <span className="text-xs font-medium" style={{ color: "#1a1a1a" }}>{pixData.instituicaoRecebedor || "Banco"}</span>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ borderTop: "1px solid #eee" }} />
+
+        {/* ID da transação */}
+        <div>
+          <p className="text-xs" style={{ color: "#999" }}>ID da transação</p>
+          <p className="text-[10px] font-mono break-all mt-0.5" style={{ color: "#666" }}>
+            {pixData.idTransacao || "E00000000202604131430abcdef123456"}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ── Main component ──────────────────────────────────────── */
 
 const ExtratoGenerator = () => {
@@ -388,6 +497,28 @@ const ExtratoGenerator = () => {
   const extratoRef = useRef<HTMLDivElement>(null);
   const [exporting, setExporting] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  // Comprovante Pix state
+  const [pixData, setPixData] = useState<PixData>({
+    valor: "",
+    pagador: "",
+    cpfPagador: "",
+    recebedor: "",
+    cpfRecebedor: "",
+    instituicaoPagador: "",
+    instituicaoRecebedor: "",
+    dataHora: "",
+    idTransacao: generatePixId(),
+  });
+
+  const updatePixData = (field: keyof PixData, val: string) => {
+    let sanitized = val;
+    if (field === "valor") sanitized = val.replace(/\D/g, "").slice(0, 12);
+    if (field === "cpfPagador" || field === "cpfRecebedor") sanitized = val.replace(/\D/g, "").slice(0, 11);
+    setPixData((prev) => ({ ...prev, [field]: sanitized }));
+  };
+
+  const isPixMode = bank === "pix-comprovante";
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -484,6 +615,7 @@ const ExtratoGenerator = () => {
   };
 
   const renderPreview = () => {
+    if (bank === "pix-comprovante") return <PreviewPixComprovante pixData={pixData} />;
     const props = { transactions, dateLabel };
     switch (bank) {
       case "inter": return <PreviewInter {...props} />;
@@ -545,68 +677,179 @@ const ExtratoGenerator = () => {
             </div>
           </div>
 
-          {/* Date label */}
-          <div>
-            <label className="block text-xs font-medium text-muted-foreground mb-1">Rótulo de data</label>
-            <input
-              type="text"
-              placeholder="Ex: Hoje, 12 de abril"
-              value={dateLabel}
-              onChange={(e) => setDateLabel(e.target.value)}
-              className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors"
-            />
-          </div>
-
-          {/* Transactions */}
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={transactions.map((t) => t.id)} strategy={verticalListSortingStrategy}>
+          {isPixMode ? (
+            <>
+              {/* Comprovante Pix form */}
               <div className="space-y-3">
-                {transactions.map((t, i) => (
-                  <SortableTransaction
-                    key={t.id} t={t} i={i}
-                    total={transactions.length} bank={bank}
-                    onRemove={removeTransaction}
-                    onUpdate={updateTransaction}
-                    onDuplicate={duplicateTransaction}
+                <div className="bg-card/50 backdrop-blur-sm rounded-xl p-4 border border-border/50 space-y-3">
+                  <span className="text-sm font-medium text-muted-foreground">Valor</span>
+                  <input
+                    type="text"
+                    placeholder="R$ 0,00"
+                    value={formatCurrencyInput(pixData.valor)}
+                    onChange={(e) => updatePixData("valor", e.target.value)}
+                    className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors"
                   />
-                ))}
+                </div>
+
+                <div className="bg-card/50 backdrop-blur-sm rounded-xl p-4 border border-border/50 space-y-3">
+                  <span className="text-sm font-medium text-muted-foreground">Quem pagou</span>
+                  <input
+                    type="text" placeholder="Nome do pagador"
+                    value={pixData.pagador}
+                    onChange={(e) => updatePixData("pagador", e.target.value)}
+                    className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors"
+                  />
+                  <input
+                    type="text" placeholder="CPF do pagador"
+                    value={maskCPF(pixData.cpfPagador)}
+                    onChange={(e) => updatePixData("cpfPagador", e.target.value)}
+                    className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors"
+                  />
+                  <input
+                    type="text" placeholder="Instituição (ex: Nubank)"
+                    value={pixData.instituicaoPagador}
+                    onChange={(e) => updatePixData("instituicaoPagador", e.target.value)}
+                    className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors"
+                  />
+                </div>
+
+                <div className="bg-card/50 backdrop-blur-sm rounded-xl p-4 border border-border/50 space-y-3">
+                  <span className="text-sm font-medium text-muted-foreground">Quem recebeu</span>
+                  <input
+                    type="text" placeholder="Nome do recebedor"
+                    value={pixData.recebedor}
+                    onChange={(e) => updatePixData("recebedor", e.target.value)}
+                    className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors"
+                  />
+                  <input
+                    type="text" placeholder="CPF do recebedor"
+                    value={maskCPF(pixData.cpfRecebedor)}
+                    onChange={(e) => updatePixData("cpfRecebedor", e.target.value)}
+                    className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors"
+                  />
+                  <input
+                    type="text" placeholder="Instituição (ex: Banco Inter)"
+                    value={pixData.instituicaoRecebedor}
+                    onChange={(e) => updatePixData("instituicaoRecebedor", e.target.value)}
+                    className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors"
+                  />
+                </div>
+
+                <div className="bg-card/50 backdrop-blur-sm rounded-xl p-4 border border-border/50 space-y-3">
+                  <span className="text-sm font-medium text-muted-foreground">Detalhes</span>
+                  <input
+                    type="text" placeholder="Data e hora (ex: 13/04/2026 - 14:30:00)"
+                    value={pixData.dataHora}
+                    onChange={(e) => updatePixData("dataHora", e.target.value)}
+                    className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors"
+                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="text" placeholder="ID da transação"
+                      value={pixData.idTransacao}
+                      onChange={(e) => updatePixData("idTransacao", e.target.value)}
+                      className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors font-mono text-xs"
+                    />
+                    <button
+                      onClick={() => updatePixData("idTransacao", generatePixId())}
+                      className="text-xs text-muted-foreground hover:text-foreground px-2 py-1 rounded-md hover:bg-muted transition-colors"
+                      title="Gerar novo ID"
+                    >
+                      <RotateCcw size={14} />
+                    </button>
+                  </div>
+                </div>
               </div>
-            </SortableContext>
-          </DndContext>
 
-          {/* Total */}
-          <div className="flex items-center justify-between px-1 pt-2 border-t border-border/50">
-            <span className="text-sm font-medium text-muted-foreground">Total ({transactions.length} transação{transactions.length > 1 ? "ões" : ""})</span>
-            <span className="text-sm font-bold text-primary">{calcTotal(transactions)}</span>
-          </div>
+              {/* Action buttons */}
+              <div className="flex gap-2">
+                <button
+                  onClick={handleExport}
+                  disabled={exporting}
+                  className="flex-1 flex items-center justify-center gap-2 bg-accent text-accent-foreground rounded-lg py-2.5 text-sm font-medium hover:bg-accent/90 transition-colors disabled:opacity-50"
+                >
+                  <Download size={16} /> {exporting ? "Exportando..." : "Exportar PNG"}
+                </button>
+                <button
+                  onClick={handleCopyClipboard}
+                  className={`flex items-center justify-center gap-2 rounded-lg py-2.5 px-3 text-sm font-medium transition-all border ${
+                    copied
+                      ? "bg-primary/10 text-primary border-primary/30"
+                      : "bg-card text-foreground border-border hover:bg-muted"
+                  }`}
+                  title="Copiar para área de transferência"
+                >
+                  {copied ? <ClipboardCheck size={16} /> : <Copy size={16} />}
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Date label */}
+              <div>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">Rótulo de data</label>
+                <input
+                  type="text"
+                  placeholder="Ex: Hoje, 12 de abril"
+                  value={dateLabel}
+                  onChange={(e) => setDateLabel(e.target.value)}
+                  className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors"
+                />
+              </div>
 
-          {/* Action buttons */}
-          <div className="flex gap-2">
-            <button
-              onClick={addTransaction}
-              className="flex-1 flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-lg py-2.5 text-sm font-medium hover:bg-primary/90 transition-colors"
-            >
-              <Plus size={16} /> Adicionar
-            </button>
-            <button
-              onClick={handleExport}
-              disabled={exporting}
-              className="flex-1 flex items-center justify-center gap-2 bg-accent text-accent-foreground rounded-lg py-2.5 text-sm font-medium hover:bg-accent/90 transition-colors disabled:opacity-50"
-            >
-              <Download size={16} /> {exporting ? "Exportando..." : "Exportar PNG"}
-            </button>
-            <button
-              onClick={handleCopyClipboard}
-              className={`flex items-center justify-center gap-2 rounded-lg py-2.5 px-3 text-sm font-medium transition-all border ${
-                copied
-                  ? "bg-primary/10 text-primary border-primary/30"
-                  : "bg-card text-foreground border-border hover:bg-muted"
-              }`}
-              title="Copiar para área de transferência"
-            >
-              {copied ? <ClipboardCheck size={16} /> : <Copy size={16} />}
-            </button>
-          </div>
+              {/* Transactions */}
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <SortableContext items={transactions.map((t) => t.id)} strategy={verticalListSortingStrategy}>
+                  <div className="space-y-3">
+                    {transactions.map((t, i) => (
+                      <SortableTransaction
+                        key={t.id} t={t} i={i}
+                        total={transactions.length} bank={bank}
+                        onRemove={removeTransaction}
+                        onUpdate={updateTransaction}
+                        onDuplicate={duplicateTransaction}
+                      />
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
+
+              {/* Total */}
+              <div className="flex items-center justify-between px-1 pt-2 border-t border-border/50">
+                <span className="text-sm font-medium text-muted-foreground">Total ({transactions.length} transação{transactions.length > 1 ? "ões" : ""})</span>
+                <span className="text-sm font-bold text-primary">{calcTotal(transactions)}</span>
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex gap-2">
+                <button
+                  onClick={addTransaction}
+                  className="flex-1 flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-lg py-2.5 text-sm font-medium hover:bg-primary/90 transition-colors"
+                >
+                  <Plus size={16} /> Adicionar
+                </button>
+                <button
+                  onClick={handleExport}
+                  disabled={exporting}
+                  className="flex-1 flex items-center justify-center gap-2 bg-accent text-accent-foreground rounded-lg py-2.5 text-sm font-medium hover:bg-accent/90 transition-colors disabled:opacity-50"
+                >
+                  <Download size={16} /> {exporting ? "Exportando..." : "Exportar PNG"}
+                </button>
+                <button
+                  onClick={handleCopyClipboard}
+                  className={`flex items-center justify-center gap-2 rounded-lg py-2.5 px-3 text-sm font-medium transition-all border ${
+                    copied
+                      ? "bg-primary/10 text-primary border-primary/30"
+                      : "bg-card text-foreground border-border hover:bg-muted"
+                  }`}
+                  title="Copiar para área de transferência"
+                >
+                  {copied ? <ClipboardCheck size={16} /> : <Copy size={16} />}
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
