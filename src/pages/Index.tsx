@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
 import ExtratoGenerator from "@/components/ExtratoGenerator";
 import { Button } from "@/components/ui/button";
-import { Shield, LogOut, Sun, Moon, Receipt } from "lucide-react";
+import { Shield, LogOut, Sun, Moon, Receipt, Clock } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -12,6 +12,7 @@ const Index = () => {
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [daysLeft, setDaysLeft] = useState<number | null>(null);
 
   useEffect(() => {
     const checkAdmin = async () => {
@@ -24,6 +25,31 @@ const Index = () => {
     };
     checkAdmin();
   }, [session]);
+
+  useEffect(() => {
+    const checkSubscription = async () => {
+      if (!session?.user) return;
+      const { data } = await supabase
+        .from("user_subscriptions")
+        .select("expires_at")
+        .eq("user_id", session.user.id)
+        .single();
+
+      if (data) {
+        const now = new Date();
+        const expires = new Date(data.expires_at);
+        const diff = Math.ceil((expires.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        if (diff <= 0) {
+          // Expirou — desloga
+          await supabase.auth.signOut();
+          navigate("/login");
+          return;
+        }
+        setDaysLeft(diff);
+      }
+    };
+    checkSubscription();
+  }, [session, navigate]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -88,6 +114,18 @@ const Index = () => {
             </span>
           </div>
           <div className="flex gap-1.5 items-center">
+            {daysLeft !== null && (
+              <div className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${
+                daysLeft <= 3
+                  ? "bg-red-500/10 text-red-500"
+                  : daysLeft <= 7
+                  ? "bg-yellow-500/10 text-yellow-500"
+                  : "bg-green-500/10 text-green-500"
+              }`}>
+                <Clock className="h-3.5 w-3.5" />
+                <span>{daysLeft} {daysLeft === 1 ? "dia restante" : "dias restantes"}</span>
+              </div>
+            )}
             <Button
               variant="ghost"
               size="icon"

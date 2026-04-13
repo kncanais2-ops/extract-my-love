@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Lock, Mail, ShieldAlert } from "lucide-react";
+import { Lock, Mail, ShieldAlert, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getGeoIP } from "@/lib/geoip";
 import { getFingerprint } from "@/lib/fingerprint";
@@ -14,6 +14,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [blocked, setBlocked] = useState(false);
+  const [expired, setExpired] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -65,7 +66,24 @@ const Login = () => {
       });
     }
 
-    // 4. Sessão única — invalida outras sessões
+    // 4. Verifica validade da assinatura
+    const { data: subscription } = await supabase
+      .from("user_subscriptions")
+      .select("expires_at")
+      .eq("user_id", user.id)
+      .single();
+
+    if (subscription) {
+      const expiresAt = new Date(subscription.expires_at);
+      if (expiresAt < new Date()) {
+        await supabase.auth.signOut();
+        setExpired(true);
+        setLoading(false);
+        return;
+      }
+    }
+
+    // 5. Sessão única — invalida outras sessões
     // (re-autentica para garantir sessão fresca)
     await supabase.auth.signOut({ scope: "others" as "global" });
 
@@ -96,7 +114,18 @@ const Login = () => {
           <p className="text-sm text-muted-foreground">Acesse sua conta</p>
         </CardHeader>
         <CardContent>
-          {blocked ? (
+          {expired ? (
+            <div className="text-center space-y-3 py-4">
+              <Clock className="h-10 w-10 text-yellow-500 mx-auto" />
+              <h3 className="font-semibold text-yellow-500">Assinatura expirada</h3>
+              <p className="text-sm text-muted-foreground">
+                Sua assinatura expirou. Para renovar o acesso, entre em contato com o administrador.
+              </p>
+              <Button variant="outline" onClick={() => setExpired(false)} className="mt-2">
+                Tentar novamente
+              </Button>
+            </div>
+          ) : blocked ? (
             <div className="text-center space-y-3 py-4">
               <ShieldAlert className="h-10 w-10 text-destructive mx-auto" />
               <h3 className="font-semibold text-destructive">Dispositivo não autorizado</h3>

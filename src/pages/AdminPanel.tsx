@@ -10,7 +10,7 @@ import {
   Shield, UserPlus, Trash2, Lock, Unlock, ArrowLeft, Sun, Moon,
   Users, UserCheck, UserX, RefreshCw, Search, Download, KeyRound,
   ShieldCheck, ShieldOff, ChevronUp, ChevronDown, Receipt, MapPin, X,
-  Smartphone, SmartphoneNfc,
+  Smartphone, SmartphoneNfc, Clock, CalendarClock,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -25,6 +25,7 @@ interface UserItem {
   has_device: boolean;
   device_label: string | null;
   device_authorized_at: string | null;
+  expires_at: string | null;
 }
 
 interface LoginLog {
@@ -62,6 +63,8 @@ const AdminPanel = () => {
   const [loginLogs, setLoginLogs] = useState<LoginLog[]>([]);
   const [loadingLogs, setLoadingLogs] = useState(false);
   const [newPassword, setNewPassword] = useState("");
+  const [expirationTarget, setExpirationTarget] = useState<UserItem | null>(null);
+  const [expirationDays, setExpirationDays] = useState("");
 
   const callAdmin = async (body: Record<string, unknown>) => {
     const { data, error } = await supabase.functions.invoke("admin-users", { body });
@@ -214,6 +217,38 @@ const AdminPanel = () => {
     }
   };
 
+  const handleSetExpiration = async () => {
+    if (!expirationTarget || !expirationDays) return;
+    try {
+      await callAdmin({ action: "set_expiration", user_id: expirationTarget.id, days: Number(expirationDays) });
+      toast({ title: "Validade definida", description: `${expirationTarget.email} tem ${expirationDays} dias de acesso.` });
+      setExpirationTarget(null);
+      setExpirationDays("");
+      loadUsers();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Erro ao definir validade";
+      toast({ title: "Erro", description: msg, variant: "destructive" });
+    }
+  };
+
+  const handleRemoveExpiration = async (user: UserItem) => {
+    try {
+      await callAdmin({ action: "remove_expiration", user_id: user.id });
+      toast({ title: "Validade removida", description: `${user.email} agora tem acesso ilimitado.` });
+      loadUsers();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Erro ao remover validade";
+      toast({ title: "Erro", description: msg, variant: "destructive" });
+    }
+  };
+
+  const getDaysLeft = (expiresAt: string | null): number | null => {
+    if (!expiresAt) return null;
+    const now = new Date();
+    const expires = new Date(expiresAt);
+    return Math.ceil((expires.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  };
+
   const handleExportCSV = () => {
     const header = "Email,Status,Admin,Criado em,Último login\n";
     const rows = users.map((u) =>
@@ -275,7 +310,11 @@ const AdminPanel = () => {
       const d = new Date(u.created_at);
       return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
     }).length;
-    return { total, active, blocked, thisMonth };
+    const expired = users.filter((u) => {
+      if (!u.expires_at) return false;
+      return new Date(u.expires_at) < now;
+    }).length;
+    return { total, active, blocked, thisMonth, expired };
   }, [users]);
 
   const formatDate = (d: string | null) => {
@@ -338,11 +377,12 @@ const AdminPanel = () => {
 
       <main className="flex-1 max-w-6xl mx-auto w-full px-4 py-6 space-y-6">
         {/* Metrics */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {[
             { label: "Total", value: metrics.total, icon: Users, color: "text-foreground" },
             { label: "Ativos", value: metrics.active, icon: UserCheck, color: "text-green-500" },
             { label: "Bloqueados", value: metrics.blocked, icon: UserX, color: "text-red-500" },
+            { label: "Expirados", value: metrics.expired, icon: Clock, color: "text-yellow-500" },
             { label: "Novos este mês", value: metrics.thisMonth, icon: UserPlus, color: "text-blue-500" },
           ].map((m) => (
             <Card key={m.label} className="bg-card/50 backdrop-blur-sm border-border/50">
@@ -447,7 +487,7 @@ const AdminPanel = () => {
             ) : (
               <>
                 {/* Table header — desktop only */}
-                <div className="hidden md:grid grid-cols-[1fr_100px_100px_120px_120px_140px] gap-2 px-3 pb-2 text-xs font-medium text-muted-foreground">
+                <div className="hidden md:grid grid-cols-[1fr_80px_80px_110px_110px_100px_160px] gap-2 px-3 pb-2 text-xs font-medium text-muted-foreground">
                   <button onClick={() => handleSort("email")} className="flex items-center gap-1 hover:text-foreground transition-colors text-left">
                     Email <SortIcon field="email" />
                   </button>
@@ -461,6 +501,7 @@ const AdminPanel = () => {
                   <button onClick={() => handleSort("last_sign_in_at")} className="flex items-center gap-1 hover:text-foreground transition-colors">
                     Último login <SortIcon field="last_sign_in_at" />
                   </button>
+                  <span>Validade</span>
                   <span className="text-right">Ações</span>
                 </div>
 
@@ -471,7 +512,7 @@ const AdminPanel = () => {
                       className="bg-background/50 border border-border/50 rounded-xl p-3 hover:shadow-md transition-shadow"
                     >
                       {/* Desktop layout */}
-                      <div className="hidden md:grid grid-cols-[1fr_100px_100px_120px_120px_140px] gap-2 items-center">
+                      <div className="hidden md:grid grid-cols-[1fr_80px_80px_110px_110px_100px_160px] gap-2 items-center">
                         <span className="text-sm font-medium truncate">{user.email}</span>
                         <span className={`text-xs font-medium px-2 py-0.5 rounded-full w-fit ${
                           user.is_blocked ? "bg-red-500/10 text-red-500" : "bg-green-500/10 text-green-500"
@@ -488,6 +529,16 @@ const AdminPanel = () => {
                           <div>{formatDate(user.last_sign_in_at)}</div>
                           {user.last_ip && <div className="opacity-60 truncate max-w-[140px]" title={user.last_ip}>{user.last_ip}</div>}
                         </div>
+                        {(() => {
+                          const days = getDaysLeft(user.expires_at);
+                          if (days === null) return <span className="text-xs text-muted-foreground">Ilimitado</span>;
+                          if (days <= 0) return <span className="text-xs font-medium text-red-500">Expirado</span>;
+                          return (
+                            <span className={`text-xs font-medium ${days <= 3 ? "text-red-500" : days <= 7 ? "text-yellow-500" : "text-green-500"}`}>
+                              {days} {days === 1 ? "dia" : "dias"}
+                            </span>
+                          );
+                        })()}
                         <div className="flex items-center justify-end gap-1">
                           <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg"
                             onClick={() => handleToggleBlock(user.id, !user.is_blocked)}
@@ -517,6 +568,11 @@ const AdminPanel = () => {
                               : <SmartphoneNfc className="h-4 w-4 text-muted-foreground" />}
                           </Button>
                           <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg"
+                            onClick={() => { setExpirationTarget(user); setExpirationDays(""); }}
+                            title="Definir validade">
+                            <CalendarClock className="h-4 w-4 text-yellow-500" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg"
                             onClick={() => setDeleteTarget(user)}
                             title="Excluir">
                             <Trash2 className="h-4 w-4 text-red-500" />
@@ -543,6 +599,19 @@ const AdminPanel = () => {
                           <span>Criado: {formatDate(user.created_at)}</span>
                           <span className="truncate" title={user.last_ip || undefined}>Login: {formatDate(user.last_sign_in_at)}{user.last_ip && ` · ${user.last_ip}`}</span>
                         </div>
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-muted-foreground">Validade:</span>
+                          {(() => {
+                            const days = getDaysLeft(user.expires_at);
+                            if (days === null) return <span className="text-muted-foreground">Ilimitado</span>;
+                            if (days <= 0) return <span className="font-medium text-red-500">Expirado</span>;
+                            return (
+                              <span className={`font-medium ${days <= 3 ? "text-red-500" : days <= 7 ? "text-yellow-500" : "text-green-500"}`}>
+                                {days} {days === 1 ? "dia" : "dias"}
+                              </span>
+                            );
+                          })()}
+                        </div>
                         <div className="flex items-center gap-1 justify-end border-t border-border/30 pt-2">
                           <Button variant="ghost" size="sm" className="h-8 rounded-lg gap-1 text-xs"
                             onClick={() => handleToggleBlock(user.id, !user.is_blocked)}>
@@ -565,6 +634,10 @@ const AdminPanel = () => {
                           <Button variant="ghost" size="sm" className={`h-8 rounded-lg text-xs ${user.has_device ? "text-green-500" : "text-muted-foreground"}`}
                             onClick={() => handleResetDevice(user)}>
                             {user.has_device ? <Smartphone className="h-3.5 w-3.5" /> : <SmartphoneNfc className="h-3.5 w-3.5" />}
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-8 rounded-lg text-xs text-yellow-500"
+                            onClick={() => { setExpirationTarget(user); setExpirationDays(""); }}>
+                            <CalendarClock className="h-3.5 w-3.5" />
                           </Button>
                           <Button variant="ghost" size="sm" className="h-8 rounded-lg text-xs text-red-500"
                             onClick={() => setDeleteTarget(user)}>
@@ -735,6 +808,78 @@ const AdminPanel = () => {
                 )}
               </div>
             )}
+          </div>
+        </div>
+      )}
+      {/* Set expiration modal */}
+      {expirationTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setExpirationTarget(null)}>
+          <div className="bg-card rounded-2xl border border-border shadow-2xl max-w-sm w-full p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-full bg-yellow-500/10">
+                <CalendarClock className="h-5 w-5 text-yellow-500" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-foreground">Definir validade</h3>
+                <p className="text-sm text-muted-foreground">{expirationTarget.email}</p>
+              </div>
+            </div>
+
+            {expirationTarget.expires_at && (
+              <div className="text-xs text-muted-foreground bg-muted/50 rounded-lg px-3 py-2">
+                Validade atual: {formatDate(expirationTarget.expires_at)}
+                {(() => {
+                  const days = getDaysLeft(expirationTarget.expires_at);
+                  if (days === null) return null;
+                  if (days <= 0) return <span className="ml-1 text-red-500 font-medium">(Expirado)</span>;
+                  return <span className="ml-1 font-medium">({days} {days === 1 ? "dia restante" : "dias restantes"})</span>;
+                })()}
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Dias de acesso</label>
+              <Input
+                type="number"
+                placeholder="Ex: 30"
+                value={expirationDays}
+                onChange={(e) => setExpirationDays(e.target.value)}
+                min={1}
+                className="rounded-lg"
+              />
+              <div className="flex flex-wrap gap-1.5">
+                {[7, 15, 30, 60, 90].map((d) => (
+                  <Button
+                    key={d}
+                    variant="outline"
+                    size="sm"
+                    className="rounded-lg text-xs h-7"
+                    onClick={() => setExpirationDays(String(d))}
+                  >
+                    {d} dias
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex gap-2 justify-between">
+              {expirationTarget.expires_at && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="rounded-lg text-xs text-muted-foreground"
+                  onClick={() => { handleRemoveExpiration(expirationTarget); setExpirationTarget(null); }}
+                >
+                  Remover validade
+                </Button>
+              )}
+              <div className="flex gap-2 ml-auto">
+                <Button variant="outline" size="sm" onClick={() => setExpirationTarget(null)} className="rounded-lg">Cancelar</Button>
+                <Button size="sm" onClick={handleSetExpiration} disabled={!expirationDays || Number(expirationDays) < 1} className="rounded-lg">
+                  Definir
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       )}

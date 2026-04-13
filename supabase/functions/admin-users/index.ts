@@ -97,6 +97,11 @@ serve(async (req: Request) => {
         .select("user_id, logged_in_at, ip_address")
         .order("logged_in_at", { ascending: false });
 
+      // Busca assinaturas
+      const { data: subscriptions } = await adminClient
+        .from("user_subscriptions")
+        .select("user_id, expires_at");
+
       // Agrupa por user_id pegando apenas o mais recente
       const lastLoginMap: Record<string, { logged_in_at: string; ip_address: string }> = {};
       if (lastLogins) {
@@ -104,6 +109,13 @@ serve(async (req: Request) => {
           if (!lastLoginMap[log.user_id]) {
             lastLoginMap[log.user_id] = { logged_in_at: log.logged_in_at, ip_address: log.ip_address };
           }
+        }
+      }
+
+      const subMap: Record<string, string> = {};
+      if (subscriptions) {
+        for (const sub of subscriptions) {
+          subMap[sub.user_id] = sub.expires_at;
         }
       }
 
@@ -118,6 +130,7 @@ serve(async (req: Request) => {
         has_device: authDevices?.some((d: any) => d.user_id === u.id) ?? false,
         device_label: authDevices?.find((d: any) => d.user_id === u.id)?.device_label ?? null,
         device_authorized_at: authDevices?.find((d: any) => d.user_id === u.id)?.authorized_at ?? null,
+        expires_at: subMap[u.id] || null,
       }));
 
       return new Response(JSON.stringify({ users }), { headers });
@@ -179,6 +192,33 @@ serve(async (req: Request) => {
     if (action === "reset_device") {
       const { user_id } = body;
       await adminClient.from("authorized_devices").delete().eq("user_id", user_id);
+      return new Response(JSON.stringify({ ok: true }), { headers });
+    }
+
+    // DEFINIR VALIDADE DA CONTA (dias)
+    if (action === "set_expiration") {
+      const { user_id, days } = body;
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + Number(days));
+
+      const { error } = await adminClient
+        .from("user_subscriptions")
+        .upsert(
+          { user_id, expires_at: expiresAt.toISOString(), updated_at: new Date().toISOString() },
+          { onConflict: "user_id" }
+        );
+      if (error) throw error;
+
+      // Se o usuário estava bloqueado por expiração, desbloqueia
+      await adminClient.from("user_devices").delete().eq("user_id", user_id);
+
+      return new Response(JSON.stringify({ ok: true, expires_at: expiresAt.toISOString() }), { headers });
+    }
+
+    // REMOVER VALIDADE (acesso ilimitado)
+    if (action === "remove_expiration") {
+      const { user_id } = body;
+      await adminClient.from("user_subscriptions").delete().eq("user_id", user_id);
       return new Response(JSON.stringify({ ok: true }), { headers });
     }
 
