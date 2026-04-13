@@ -12,10 +12,29 @@
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content="Extratos Lives">
     <meta name="twitter:description" content="Gerador de extratos bancários personalizados">
+
+    <!-- Anti-iframe (X-Frame fallback) -->
+    <meta http-equiv="X-Frame-Options" content="DENY" />
+    <meta http-equiv="Content-Security-Policy" content="frame-ancestors 'none'" />
+
+    <!-- Referrer policy — não vaza URLs internas -->
+    <meta name="referrer" content="no-referrer" />
 </head>
 
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+
+    <!-- Proteção pré-React (executa antes do bundle carregar) -->
+    <script>
+      // Bloqueia clique direito imediato
+      document.addEventListener("contextmenu",function(e){e.preventDefault()});
+      // Bloqueia F12 e atalhos imediato
+      document.addEventListener("keydown",function(e){
+        if(e.key==="F12"||(e.ctrlKey&&e.shiftKey&&/[IJC]/.test(e.key))||(e.ctrlKey&&e.key==="u")){e.preventDefault()}
+      });
+      // Anti-iframe imediato
+      if(window.self!==window.top){document.body.innerHTML="";window.top.location=window.self.location}
+    </script>
   </body>
 </html>
