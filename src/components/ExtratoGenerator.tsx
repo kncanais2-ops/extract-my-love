@@ -488,7 +488,7 @@ function PreviewPixComprovante({ pixData }: { pixData: PixData }) {
 
 /* ── Main component ──────────────────────────────────────── */
 
-const ExtratoGenerator = () => {
+const ExtratoGenerator = ({ showComprovante = false }: { showComprovante?: boolean }) => {
   const [bank, setBank] = useState<BankType>("inter");
   const [transactions, setTransactions] = useState<Transaction[]>([
     { id: "1", name: "", value: "", category: "Sem categoria", time: "23:10" },
@@ -519,6 +519,7 @@ const ExtratoGenerator = () => {
   };
 
   const isPixMode = bank === "pix-comprovante";
+  const visibleBanks = showComprovante ? BANKS : BANKS.filter((b) => b.id !== "pix-comprovante");
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -654,7 +655,7 @@ const ExtratoGenerator = () => {
           <div>
             <label className="block text-xs font-medium text-muted-foreground mb-2">Selecione o banco</label>
             <div className="grid grid-cols-4 gap-2">
-              {BANKS.map((b) => (
+              {visibleBanks.map((b) => (
                 <button
                   key={b.id}
                   onClick={() => setBank(b.id)}

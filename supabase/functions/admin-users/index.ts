@@ -127,6 +127,7 @@ serve(async (req: Request) => {
         last_ip: lastLoginMap[u.id]?.ip_address || null,
         is_blocked: devices?.find((d: any) => d.user_id === u.id)?.is_blocked ?? false,
         is_admin: roles?.some((r: any) => r.user_id === u.id && r.role === "admin") ?? false,
+        has_comprovante: roles?.some((r: any) => r.user_id === u.id && r.role === "comprovante") ?? false,
         has_device: authDevices?.some((d: any) => d.user_id === u.id) ?? false,
         device_label: authDevices?.find((d: any) => d.user_id === u.id)?.device_label ?? null,
         device_authorized_at: authDevices?.find((d: any) => d.user_id === u.id)?.authorized_at ?? null,
@@ -184,6 +185,23 @@ serve(async (req: Request) => {
           .delete()
           .eq("user_id", user_id)
           .eq("role", "admin");
+      }
+      return new Response(JSON.stringify({ ok: true }), { headers });
+    }
+
+    // PERMISSÃO DE COMPROVANTE
+    if (action === "toggle_comprovante") {
+      const { user_id, grant } = body;
+      if (grant) {
+        await adminClient
+          .from("user_roles")
+          .upsert({ user_id, role: "comprovante" }, { onConflict: "user_id,role" });
+      } else {
+        await adminClient
+          .from("user_roles")
+          .delete()
+          .eq("user_id", user_id)
+          .eq("role", "comprovante");
       }
       return new Response(JSON.stringify({ ok: true }), { headers });
     }

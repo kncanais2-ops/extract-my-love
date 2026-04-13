@@ -12,18 +12,26 @@ const Index = () => {
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [hasComprovante, setHasComprovante] = useState(false);
   const [daysLeft, setDaysLeft] = useState<number | null>(null);
 
   useEffect(() => {
-    const checkAdmin = async () => {
+    const checkRoles = async () => {
       if (!session?.user) return;
-      const { data } = await supabase.rpc("has_role", {
+      const { data: admin } = await supabase.rpc("has_role", {
         _user_id: session.user.id,
         _role: "admin",
       });
-      setIsAdmin(!!data);
+      setIsAdmin(!!admin);
+
+      const { data: comprovante } = await supabase.rpc("has_role", {
+        _user_id: session.user.id,
+        _role: "comprovante",
+      });
+      // Admin sempre tem acesso ao comprovante
+      setHasComprovante(!!admin || !!comprovante);
     };
-    checkAdmin();
+    checkRoles();
   }, [session]);
 
   useEffect(() => {
@@ -153,7 +161,7 @@ const Index = () => {
 
       {/* Main */}
       <main className="flex-1 py-4">
-        <ExtratoGenerator />
+        <ExtratoGenerator showComprovante={hasComprovante} />
       </main>
 
       {/* Footer */}

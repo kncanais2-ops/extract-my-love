@@ -10,7 +10,7 @@ import {
   Shield, UserPlus, Trash2, Lock, Unlock, ArrowLeft, Sun, Moon,
   Users, UserCheck, UserX, RefreshCw, Search, Download, KeyRound,
   ShieldCheck, ShieldOff, ChevronUp, ChevronDown, Receipt, MapPin, X,
-  Smartphone, SmartphoneNfc, Clock, CalendarClock,
+  Smartphone, SmartphoneNfc, Clock, CalendarClock, FileCheck, FileX,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -26,6 +26,7 @@ interface UserItem {
   device_label: string | null;
   device_authorized_at: string | null;
   expires_at: string | null;
+  has_comprovante: boolean;
 }
 
 interface LoginLog {
@@ -214,6 +215,16 @@ const AdminPanel = () => {
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao alterar cargo";
       toast({ title: "Erro", description: msg, variant: "destructive" });
+    }
+  };
+
+  const handleToggleComprovante = async (userId: string, grant: boolean) => {
+    try {
+      await callAdmin({ action: "toggle_comprovante", user_id: userId, grant });
+      toast({ title: grant ? "Comprovante liberado" : "Comprovante removido" });
+      loadUsers();
+    } catch {
+      toast({ title: "Erro ao alterar permissão", variant: "destructive" });
     }
   };
 
@@ -568,6 +579,13 @@ const AdminPanel = () => {
                               : <SmartphoneNfc className="h-4 w-4 text-muted-foreground" />}
                           </Button>
                           <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg"
+                            onClick={() => handleToggleComprovante(user.id, !user.has_comprovante)}
+                            title={user.has_comprovante ? "Remover acesso ao comprovante" : "Liberar comprovante"}>
+                            {user.has_comprovante
+                              ? <FileCheck className="h-4 w-4 text-teal-500" />
+                              : <FileX className="h-4 w-4 text-muted-foreground" />}
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg"
                             onClick={() => { setExpirationTarget(user); setExpirationDays(""); }}
                             title="Definir validade">
                             <CalendarClock className="h-4 w-4 text-yellow-500" />
@@ -634,6 +652,10 @@ const AdminPanel = () => {
                           <Button variant="ghost" size="sm" className={`h-8 rounded-lg text-xs ${user.has_device ? "text-green-500" : "text-muted-foreground"}`}
                             onClick={() => handleResetDevice(user)}>
                             {user.has_device ? <Smartphone className="h-3.5 w-3.5" /> : <SmartphoneNfc className="h-3.5 w-3.5" />}
+                          </Button>
+                          <Button variant="ghost" size="sm" className={`h-8 rounded-lg text-xs ${user.has_comprovante ? "text-teal-500" : "text-muted-foreground"}`}
+                            onClick={() => handleToggleComprovante(user.id, !user.has_comprovante)}>
+                            {user.has_comprovante ? <FileCheck className="h-3.5 w-3.5" /> : <FileX className="h-3.5 w-3.5" />}
                           </Button>
                           <Button variant="ghost" size="sm" className="h-8 rounded-lg text-xs text-yellow-500"
                             onClick={() => { setExpirationTarget(user); setExpirationDays(""); }}>
