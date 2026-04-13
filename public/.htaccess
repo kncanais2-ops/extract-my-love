@@ -41,6 +41,7 @@
 # Bloqueia hotlinking de assets
 <IfModule mod_rewrite.c>
   RewriteCond %{HTTP_REFERER} !^$ [NC]
+  RewriteCond %{HTTP_REFERER} !^https?://(www\.)?extratoslive\.shop [NC]
   RewriteCond %{HTTP_REFERER} !^https?://(www\.)?extratolive\.shop [NC]
   RewriteCond %{HTTP_REFERER} !^https?://localhost [NC]
   RewriteRule \.(js|css|png|jpg|svg|ico|woff2?)$ - [F,L]

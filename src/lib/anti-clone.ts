@@ -3,6 +3,8 @@
  */
 
 const ALLOWED_DOMAINS = [
+  "extratoslive.shop",
+  "www.extratoslive.shop",
   "extratolive.shop",
   "www.extratolive.shop",
   "localhost",
@@ -206,7 +208,7 @@ function checkDomain() {
         <div>
           <h1 style="font-size:2rem;margin-bottom:1rem;">Site clonado detectado</h1>
           <p style="opacity:0.7;">Este não é o site oficial. Acesse:</p>
-          <a href="https://extratolive.shop" style="color:#3b82f6;font-size:1.2rem;">extratolive.shop</a>
+          <a href="https://extratoslive.shop" style="color:#3b82f6;font-size:1.2rem;">extratoslive.shop</a>
         </div>
       </div>
     `;
