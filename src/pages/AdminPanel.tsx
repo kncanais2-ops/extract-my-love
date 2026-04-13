@@ -484,10 +484,10 @@ const AdminPanel = () => {
                           {user.is_admin ? "Admin" : "Usuário"}
                         </span>
                         <span className="text-xs text-muted-foreground">{formatDate(user.created_at)}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {formatDate(user.last_sign_in_at)}
-                          {user.last_ip && <span className="ml-1 opacity-60">({user.last_ip})</span>}
-                        </span>
+                        <div className="text-xs text-muted-foreground">
+                          <div>{formatDate(user.last_sign_in_at)}</div>
+                          {user.last_ip && <div className="opacity-60 truncate max-w-[140px]" title={user.last_ip}>{user.last_ip}</div>}
+                        </div>
                         <div className="flex items-center justify-end gap-1">
                           <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg"
                             onClick={() => handleToggleBlock(user.id, !user.is_blocked)}
@@ -541,7 +541,7 @@ const AdminPanel = () => {
                         </div>
                         <div className="flex items-center justify-between text-xs text-muted-foreground">
                           <span>Criado: {formatDate(user.created_at)}</span>
-                          <span>Login: {formatDate(user.last_sign_in_at)}{user.last_ip && ` (${user.last_ip})`}</span>
+                          <span className="truncate" title={user.last_ip || undefined}>Login: {formatDate(user.last_sign_in_at)}{user.last_ip && ` · ${user.last_ip}`}</span>
                         </div>
                         <div className="flex items-center gap-1 justify-end border-t border-border/30 pt-2">
                           <Button variant="ghost" size="sm" className="h-8 rounded-lg gap-1 text-xs"
