@@ -390,9 +390,9 @@ function PreviewInfinitePay({ transactions, dateLabel }: { transactions: Transac
       {transactions.map((t, i) => (
         <div key={t.id} className="flex items-center px-4 py-3.5"
           style={{ borderBottom: i < transactions.length - 1 ? "1px solid #e0e0e0" : "none" }}>
-          <div className="shrink-0 flex flex-col items-center" style={{ width: 40 }}>
-            <img src="/infinitepay-icon.png" alt="" style={{ width: 32, height: 32 }} />
-            <ArrowDownLeft size={14} style={{ color: "#00A868", marginTop: 2 }} />
+          <div className="shrink-0 relative bg-transparent" style={{ width: 40, height: 44 }}>
+            <img src="/infinitepay-icon.png" alt="" className="rounded-full" style={{ width: 32, height: 32, backgroundColor: "#fff" }} />
+            <ArrowDownLeft size={14} style={{ color: "#00A868", position: "absolute", bottom: 0, right: 2 }} />
           </div>
           <div className="flex-1 ml-3">
             <p className="text-sm font-semibold" style={{ color: "#1a1a1a" }}>Pix {t.name || "Nome da pessoa"}</p>
