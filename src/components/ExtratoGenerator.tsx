@@ -158,7 +158,9 @@ const ExtratoGenerator = ({ showComprovante = false }: { showComprovante?: boole
   const [transactions, setTransactions] = useState<Transaction[]>([
     { id: "1", name: "", value: "", category: "Sem categoria", time: "23:10" },
   ]);
-  const [dateLabel, setDateLabel] = useState("Hoje, 12 de abril");
+  const [dateLabel, setDateLabel] = useState(
+    "Hoje, " + new Date().toLocaleDateString("pt-BR", { day: "numeric", month: "long" })
+  );
   const extratoRef = useRef<HTMLDivElement>(null);
   const [exporting, setExporting] = useState(false);
   const [copied, setCopied] = useState(false);
