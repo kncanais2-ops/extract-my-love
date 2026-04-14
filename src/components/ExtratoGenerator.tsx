@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import {
   Plus, Trash2, MoreHorizontal, MoreVertical, Download,
-  ArrowDownLeft, ArrowDownRight, GripVertical, ArrowUpRight, Copy, RotateCcw, ClipboardCheck,
+  ArrowDownLeft, ArrowDownRight, GripVertical, ArrowUpRight, Copy, RotateCcw, ClipboardCheck, Dices
 } from "lucide-react";
 import html2canvas from "html2canvas";
 import {
@@ -80,7 +80,7 @@ const calcTotal = (transactions: Transaction[]) => {
 /* ── Sortable transaction card ─────────────────────────── */
 
 function SortableTransaction({
-  t, i, total, bank, onRemove, onUpdate, onDuplicate,
+  t, i, total, bank, onRemove, onUpdate, onDuplicate, onRandomize
 }: {
   t: Transaction;
   i: number;
@@ -89,6 +89,7 @@ function SortableTransaction({
   onRemove: (id: string) => void;
   onUpdate: (id: string, field: keyof Transaction, val: string) => void;
   onDuplicate: (id: string) => void;
+  onRandomize: (id: string) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: t.id });
   const style = { transform: CSS.Transform.toString(transform), transition };
@@ -126,14 +127,23 @@ function SortableTransaction({
           )}
         </div>
       </div>
-      <input
-        type="text"
-        placeholder="Nome completo"
-        value={t.name}
-        maxLength={60}
-        onChange={(e) => onUpdate(t.id, "name", e.target.value)}
-        className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors"
-      />
+      <div className="flex gap-2">
+        <input
+          type="text"
+          placeholder="Nome completo"
+          value={t.name}
+          maxLength={60}
+          onChange={(e) => onUpdate(t.id, "name", e.target.value)}
+          className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors"
+        />
+        <button
+          onClick={() => onRandomize(t.id)}
+          className="flex items-center justify-center p-2.5 bg-secondary text-secondary-foreground rounded-lg border border-border hover:bg-secondary/80 transition-colors"
+          title="Aleatorizar Nome e Valor"
+        >
+          <Dices size={16} />
+        </button>
+      </div>
       <input
         type="text"
         placeholder="R$ 0,00"
@@ -616,7 +626,23 @@ const ExtratoGenerator = ({ showComprovante = false }: { showComprovante?: boole
     setTransactions([
       { id: Date.now().toString(), name: "", value: "", category: "Sem categoria", time: "23:10" },
     ]);
-    setDateLabel("Hoje, 12 de abril");
+    setDateLabel("Hoje, " + new Date().toLocaleDateString("pt-BR", { day: "numeric", month: "long" }));
+  };
+
+  const randomizeTransaction = (id: string) => {
+    const FIRST_NAMES = ["Lucas", "Marcos", "Mateus", "João", "Gabriel", "Pedro", "Thiago", "Felipe", "Rafael", "Vinícius", "Bruno", "Caio", "Arthur", "Gustavo", "Eduardo", "Diego", "Ricardo", "Renato", "Fernando", "Guilherme", "Leonardo", "Rodrigo", "Juliana", "Mariana", "Fernanda", "Amanda", "Beatriz", "Camila", "Letícia", "Carolina", "Larissa", "Natália"];
+    const LAST_NAMES = ["Silva", "Santos", "Oliveira", "Souza", "Rodrigues", "Ferreira", "Alves", "Pereira", "Lima", "Gomes", "Costa", "Ribeiro", "Martins", "Carvalho", "Almeida", "Lopes", "Soares", "Fernandes", "Vieira", "Barbosa", "Rocha", "Dias", "Mendes", "Nunes", "Cardoso"];
+
+    const fn = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)];
+    const ln = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)];
+    let ln2 = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)];
+    if (ln === ln2) ln2 = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)];
+    
+    const newName = `${fn} ${ln} ${ln2}`.trim();
+
+    setTransactions((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, name: newName } : t))
+    );
   };
 
   const updateTransaction = (id: string, field: keyof Transaction, val: string) => {
@@ -881,6 +907,7 @@ const ExtratoGenerator = ({ showComprovante = false }: { showComprovante?: boole
                         onRemove={removeTransaction}
                         onUpdate={updateTransaction}
                         onDuplicate={duplicateTransaction}
+                        onRandomize={randomizeTransaction}
                       />
                     ))}
                   </div>
