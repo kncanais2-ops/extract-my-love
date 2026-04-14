@@ -399,7 +399,7 @@ function PreviewInfinitePay({ transactions, dateLabel }: { transactions: Transac
             <p className="text-xs mt-0.5" style={{ color: "#999" }}>{t.time || "00:00"} • Recebido</p>
           </div>
           <div className="text-right shrink-0">
-            <p className="text-sm font-bold" style={{ color: "#00A868" }}>{formatCurrencyPlus(t.value)}</p>
+            <p className="text-sm font-medium" style={{ color: "#00A868" }}>{formatCurrencyPlus(t.value)}</p>
           </div>
         </div>
       ))}
