@@ -691,7 +691,7 @@ const ExtratoGenerator = ({ showComprovante = false }: { showComprovante?: boole
   };
 
   const isDarkBank = bank === "c6" || bank === "nubank";
-  const phoneBg = isDarkBank ? "#1a1a1a" : bank === "infinitepay" ? "#e8e8e8" : "#ffffff";
+  const phoneBg = isDarkBank ? "#1a1a1a" : bank === "infinitepay" ? "#f2f2f2" : "#ffffff";
   const currentBank = BANKS.find((b) => b.id === bank);
 
   return (
