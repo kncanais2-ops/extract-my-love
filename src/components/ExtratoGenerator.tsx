@@ -926,7 +926,7 @@ const ExtratoGenerator = ({ showComprovante = false }: { showComprovante?: boole
       </div>
 
       {/* Preview — sticky */}
-      <div className="w-full max-w-sm lg:sticky lg:top-4">
+      <div className="w-full max-w-md lg:sticky lg:top-4">
         <div className="text-center mb-3">
           <h2 className="text-sm font-medium text-muted-foreground">Pré-visualização</h2>
           {currentBank && (
@@ -938,7 +938,7 @@ const ExtratoGenerator = ({ showComprovante = false }: { showComprovante?: boole
         </div>
 
         {/* Phone mockup frame */}
-        <div className="mx-auto rounded-[2.5rem] border-[6px] border-gray-800 bg-gray-800 shadow-2xl overflow-hidden" style={{ maxWidth: 340 }}>
+        <div className="mx-auto rounded-[2.5rem] border-[6px] border-gray-800 bg-gray-800 shadow-2xl overflow-hidden" style={{ maxWidth: 400 }}>
           {/* Notch */}
           <div className="flex justify-center pt-1.5" style={{ backgroundColor: phoneBg }}>
             <div className="w-20 h-5 bg-gray-800 rounded-b-2xl" />
