@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Extratos Lives</title>
+    <meta name="description" content="Gerador de extratos bancários personalizados">
+    <meta name="author" content="Extratos Lives" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Extratos Lives">
+    <meta property="og:description" content="Gerador de extratos bancários personalizados">
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Extratos Lives">
+    <meta name="twitter:description" content="Gerador de extratos bancários personalizados">
+
+    <!-- Anti-iframe (X-Frame fallback) -->
+    <meta http-equiv="X-Frame-Options" content="DENY" />
+    <meta http-equiv="Content-Security-Policy" content="frame-ancestors 'none'" />
+
+    <!-- Referrer policy — não vaza URLs internas -->
+    <meta name="referrer" content="no-referrer" />
+  <script type="module" crossorigin src="/assets/index-CYuphqnP.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-BW_EanRi.css">
+</head>
+
+  <body>
+    <div id="root"></div>
+
+    <!-- Proteção pré-React (executa antes do bundle carregar) -->
+    <script>
+      // Bloqueia clique direito imediato
+      document.addEventListener("contextmenu",function(e){e.preventDefault()});
+      // Bloqueia F12 e atalhos imediato
+      document.addEventListener("keydown",function(e){
+        if(e.key==="F12"||(e.ctrlKey&&e.shiftKey&&/[IJC]/.test(e.key))||(e.ctrlKey&&e.key==="u")){e.preventDefault()}
+      });
+      // Anti-iframe imediato
+      if(window.self!==window.top){document.body.innerHTML="";window.top.location=window.self.location}
+    </script>
+  </body>
+</html>

@@ -11,6 +11,7 @@ import Index from "./pages/Index.tsx";
 import Login from "./pages/Login.tsx";
 import AdminPanel from "./pages/AdminPanel.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import ObsOverlay from "./pages/ObsOverlay.tsx";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +28,7 @@ const App = () => (
               <Route path="/login" element={<Login />} />
               <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
               <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
+              <Route path="/live/:id" element={<ObsOverlay />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AuthProvider>
