@@ -390,15 +390,8 @@ function PreviewInfinitePay({ transactions, dateLabel }: { transactions: Transac
       {transactions.map((t, i) => (
         <div key={t.id} className="flex items-center px-4 py-3.5"
           style={{ borderBottom: i < transactions.length - 1 ? "1px solid #e0e0e0" : "none" }}>
-          <div className="relative flex-shrink-0 bg-transparent">
-            <div className="flex items-center justify-center w-12 h-12 bg-white rounded-full overflow-hidden">
-              <img src="/infinite-icon.png" alt="Pix" className="w-6 h-6 object-contain bg-transparent" />
-            </div>
-            <div className="absolute -bottom-1 -right-1 flex items-center justify-center w-5 h-5 bg-white rounded-full shadow-sm">
-              <svg className="w-3 h-3 text-green-500" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
-              </svg>
-            </div>
+          <div className="relative flex-shrink-0 bg-transparent flex items-center justify-center w-12 h-12">
+            <img src="/infinite-icon.png" alt="Pix" className="w-12 h-12 object-contain bg-transparent" />
           </div>
           <div className="flex-1 ml-3">
             <p className="text-sm font-semibold" style={{ color: "#1a1a1a" }}>Pix {t.name || "Nome da pessoa"}</p>
