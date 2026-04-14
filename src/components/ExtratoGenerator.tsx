@@ -383,16 +383,21 @@ function PreviewEfi({ transactions, dateLabel }: { transactions: Transaction[]; 
 
 function PreviewInfinitePay({ transactions, dateLabel }: { transactions: Transaction[]; dateLabel: string }) {
   return (
-    <div className="py-2">
+    <div className="py-2" style={{ backgroundColor: "#2a2a2a" }}>
       {dateLabel && (
-        <p className="text-xs font-bold px-4 pt-2 pb-3" style={{ color: "#666" }}>{dateLabel}</p>
+        <p className="text-xs font-bold px-4 pt-2 pb-3" style={{ color: "#999" }}>{dateLabel}</p>
       )}
       {transactions.map((t, i) => (
         <div key={t.id} className="flex items-center px-4 py-3.5"
-          style={{ borderBottom: i < transactions.length - 1 ? "1px solid #f0f0f0" : "none" }}>
-          <img src="/infinitepay-icon.png" alt="" className="shrink-0" style={{ width: 44, height: 44 }} />
+          style={{ borderBottom: i < transactions.length - 1 ? "1px solid #3a3a3a" : "none" }}>
+          <div className="shrink-0 flex flex-col items-center" style={{ width: 40 }}>
+            <div className="flex items-center justify-center rounded-full" style={{ width: 36, height: 36, backgroundColor: "#e0e0e0" }}>
+              <img src="/infinitepay-icon.png" alt="" style={{ width: 20, height: 20 }} />
+            </div>
+            <ArrowDownLeft size={14} style={{ color: "#00A868", marginTop: 2 }} />
+          </div>
           <div className="flex-1 ml-3">
-            <p className="text-sm font-semibold" style={{ color: "#1a1a1a" }}>Pix {t.name || "Nome da pessoa"}</p>
+            <p className="text-sm font-semibold" style={{ color: "#fff" }}>Pix {t.name || "Nome da pessoa"}</p>
             <p className="text-xs mt-0.5" style={{ color: "#999" }}>{t.time || "00:00"} • Recebido</p>
           </div>
           <div className="text-right shrink-0">
@@ -690,8 +695,8 @@ const ExtratoGenerator = ({ showComprovante = false }: { showComprovante?: boole
     }
   };
 
-  const isDarkBank = bank === "c6" || bank === "nubank";
-  const phoneBg = isDarkBank ? "#1a1a1a" : bank === "infinitepay" ? "#f2f2f2" : "#ffffff";
+  const isDarkBank = bank === "c6" || bank === "nubank" || bank === "infinitepay";
+  const phoneBg = isDarkBank ? (bank === "infinitepay" ? "#2a2a2a" : "#1a1a1a") : "#ffffff";
   const currentBank = BANKS.find((b) => b.id === bank);
 
   return (
