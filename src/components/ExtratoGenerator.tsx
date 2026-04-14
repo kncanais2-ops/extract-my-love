@@ -383,22 +383,22 @@ function PreviewEfi({ transactions, dateLabel }: { transactions: Transaction[]; 
 
 function PreviewInfinitePay({ transactions, dateLabel }: { transactions: Transaction[]; dateLabel: string }) {
   return (
-    <div className="py-2" style={{ backgroundColor: "#f2f2f2" }}>
+    <div className="py-2" style={{ backgroundColor: "#F5F5F5" }}>
       {dateLabel && (
-        <p className="text-xs font-bold px-4 pt-2 pb-3" style={{ color: "#888" }}>{dateLabel}</p>
+        <p className="text-[13px] font-medium px-5 pt-3 pb-2" style={{ color: "#777" }}>{dateLabel}</p>
       )}
       {transactions.map((t, i) => (
-        <div key={t.id} className="flex items-center px-4 py-3.5"
-          style={{ borderBottom: i < transactions.length - 1 ? "1px solid #e0e0e0" : "none" }}>
-          <div className="relative flex-shrink-0 bg-transparent flex items-center justify-center w-12 h-12">
-            <img src="/infinite-icon.png" alt="Pix" className="w-12 h-12 object-contain bg-transparent" />
+        <div key={t.id} className="flex items-center px-5 py-[14px]"
+          style={{ borderBottom: i < transactions.length - 1 ? "1px solid #e5e5e5" : "none" }}>
+          <div className="relative flex-shrink-0 bg-transparent flex items-center justify-center w-[54px] h-[54px]">
+            <img src="/infinite-icon.png" alt="Pix" className="w-[54px] h-[54px] object-contain bg-transparent" />
           </div>
-          <div className="flex-1 ml-3">
-            <p className="text-sm font-semibold" style={{ color: "#1a1a1a" }}>Pix {t.name || "Nome da pessoa"}</p>
-            <p className="text-xs mt-0.5" style={{ color: "#888" }}>{t.time || "00:00"} • Recebido</p>
+          <div className="flex-1 ml-[15px]">
+            <p className="text-[15px] font-medium tracking-tight" style={{ color: "#111" }}>Pix {t.name || "Nome da pessoa"}</p>
+            <p className="text-[13.5px] mt-[1px]" style={{ color: "#666" }}>{t.time || "00:00"} • Recebido</p>
           </div>
           <div className="text-right shrink-0">
-            <p className="text-sm font-medium" style={{ color: "#00A868" }}>{formatCurrencyPlus(t.value)}</p>
+            <p className="text-[15px] font-medium" style={{ color: "#1A7B36" }}>{formatCurrencyPlus(t.value)}</p>
           </div>
         </div>
       ))}
