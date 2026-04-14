@@ -391,19 +391,8 @@ function PreviewInfinitePay({ transactions, dateLabel }: { transactions: Transac
         <div key={t.id} className="flex items-center px-4 py-3.5"
           style={{ borderBottom: i < transactions.length - 1 ? "1px solid #f0f0f0" : "none" }}>
           {/* Icon container */}
-          <div className="relative shrink-0" style={{ width: 44, height: 44 }}>
-            <div className="flex items-center justify-center rounded-full"
-              style={{ width: 44, height: 44, backgroundColor: "#f0f0f0" }}>
-              <svg viewBox="0 0 48 48" width="22" height="22">
-                <rect x="6" y="6" width="20" height="20" rx="3" ry="3" transform="rotate(45 16 16)" fill="#006B3F"/>
-                <rect x="22" y="22" width="20" height="20" rx="3" ry="3" transform="rotate(45 32 32)" fill="#00A868"/>
-              </svg>
-            </div>
-            {/* Green arrow badge */}
-            <div className="absolute flex items-center justify-center rounded-full"
-              style={{ width: 18, height: 18, backgroundColor: "#00A868", bottom: -2, left: -2 }}>
-              <ArrowDownLeft size={11} style={{ color: "#fff" }} />
-            </div>
+          <div className="shrink-0" style={{ width: 44, height: 44 }}>
+            <img src="/infinitepay-icon.png" alt="" style={{ width: 44, height: 44, objectFit: "contain" }} />
           </div>
           <div className="flex-1 ml-3">
             <p className="text-sm font-semibold" style={{ color: "#1a1a1a" }}>Pix {t.name || "Nome da pessoa"}</p>
