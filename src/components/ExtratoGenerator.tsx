@@ -30,7 +30,7 @@ interface Transaction {
   time: string;
 }
 
-type BankType = "inter" | "neon" | "nubank" | "c6" | "picpay" | "mercadopago" | "efi" | "pix-comprovante";
+type BankType = "inter" | "neon" | "nubank" | "c6" | "picpay" | "mercadopago" | "efi" | "infinitepay" | "pix-comprovante";
 
 const BANKS: { id: BankType; label: string; accent: string; ring: string }[] = [
   { id: "inter", label: "Banco Inter", accent: "#f57c00", ring: "ring-orange-500" },
@@ -40,6 +40,7 @@ const BANKS: { id: BankType; label: string; accent: string; ring: string }[] = [
   { id: "picpay", label: "PicPay", accent: "#21C25E", ring: "ring-green-500" },
   { id: "mercadopago", label: "Mercado Pago", accent: "#009EE3", ring: "ring-blue-500" },
   { id: "efi", label: "Efí Bank", accent: "#F37021", ring: "ring-orange-400" },
+  { id: "infinitepay", label: "InfinitePay", accent: "#00A868", ring: "ring-green-600" },
   { id: "pix-comprovante", label: "Comprovante Pix", accent: "#32BCAD", ring: "ring-teal-500" },
 ];
 
@@ -378,6 +379,45 @@ function PreviewEfi({ transactions, dateLabel }: { transactions: Transaction[]; 
   );
 }
 
+/* ── InfinitePay preview ───────────────────────────────── */
+
+function PreviewInfinitePay({ transactions, dateLabel }: { transactions: Transaction[]; dateLabel: string }) {
+  return (
+    <div className="py-2">
+      {dateLabel && (
+        <p className="text-xs font-bold px-4 pt-2 pb-3" style={{ color: "#666" }}>{dateLabel}</p>
+      )}
+      {transactions.map((t, i) => (
+        <div key={t.id} className="flex items-center px-4 py-3.5"
+          style={{ borderBottom: i < transactions.length - 1 ? "1px solid #f0f0f0" : "none" }}>
+          {/* Icon container */}
+          <div className="relative shrink-0" style={{ width: 44, height: 44 }}>
+            <div className="flex items-center justify-center rounded-full"
+              style={{ width: 44, height: 44, backgroundColor: "#f0f0f0" }}>
+              <svg viewBox="0 0 48 48" width="22" height="22">
+                <rect x="6" y="6" width="20" height="20" rx="3" ry="3" transform="rotate(45 16 16)" fill="#006B3F"/>
+                <rect x="22" y="22" width="20" height="20" rx="3" ry="3" transform="rotate(45 32 32)" fill="#00A868"/>
+              </svg>
+            </div>
+            {/* Green arrow badge */}
+            <div className="absolute flex items-center justify-center rounded-full"
+              style={{ width: 18, height: 18, backgroundColor: "#00A868", bottom: -2, left: -2 }}>
+              <ArrowDownLeft size={11} style={{ color: "#fff" }} />
+            </div>
+          </div>
+          <div className="flex-1 ml-3">
+            <p className="text-sm font-semibold" style={{ color: "#1a1a1a" }}>Pix {t.name || "Nome da pessoa"}</p>
+            <p className="text-xs mt-0.5" style={{ color: "#999" }}>{t.time || "00:00"} • Recebido</p>
+          </div>
+          <div className="text-right shrink-0">
+            <p className="text-sm font-bold" style={{ color: "#00A868" }}>{formatCurrencyPlus(t.value)}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /* ── Comprovante Pix preview ────────────────────────────── */
 
 interface PixData {
@@ -660,6 +700,7 @@ const ExtratoGenerator = ({ showComprovante = false }: { showComprovante?: boole
       case "picpay": return <PreviewPicPay {...props} />;
       case "mercadopago": return <PreviewMercadoPago {...props} />;
       case "efi": return <PreviewEfi {...props} />;
+      case "infinitepay": return <PreviewInfinitePay {...props} />;
     }
   };
 
