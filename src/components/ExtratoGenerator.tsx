@@ -137,11 +137,7 @@ const ExtratoGenerator = ({ showComprovante = false }: { showComprovante?: boole
   useEffect(() => {
     if (!user) return;
     supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .eq("role", "obs")
-      .maybeSingle()
+      .rpc("has_role", { _user_id: user.id, _role: "obs" })
       .then(({ data }) => setHasObs(!!data));
   }, [user]);
 
