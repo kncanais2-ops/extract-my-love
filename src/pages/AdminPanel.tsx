@@ -95,8 +95,10 @@ const AdminPanel = () => {
     try {
       const data = await callAdmin({ action: "list_users" });
       setUsers(data.users || []);
-    } catch {
-      toast({ title: "Erro ao carregar usuários", variant: "destructive" });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error("[AdminPanel] loadUsers failed:", err);
+      toast({ title: "Erro ao carregar usuários", description: message, variant: "destructive" });
     }
     setLoadingUsers(false);
   };
