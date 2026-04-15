@@ -10,7 +10,7 @@ import {
   Shield, UserPlus, Trash2, Lock, Unlock, ArrowLeft, Sun, Moon,
   Users, UserCheck, UserX, RefreshCw, Search, Download, KeyRound,
   ShieldCheck, ShieldOff, ChevronUp, ChevronDown, Receipt, MapPin, X,
-  Smartphone, SmartphoneNfc, Clock, CalendarClock, FileCheck, FileX,
+  Smartphone, SmartphoneNfc, Clock, CalendarClock, FileCheck, FileX, Tv2,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -27,6 +27,7 @@ interface UserItem {
   device_authorized_at: string | null;
   expires_at: string | null;
   has_comprovante: boolean;
+  has_obs: boolean;
 }
 
 interface LoginLog {
@@ -224,6 +225,16 @@ const AdminPanel = () => {
     try {
       await callAdmin({ action: "toggle_comprovante", user_id: userId, grant });
       toast({ title: grant ? "Comprovante liberado" : "Comprovante removido" });
+      loadUsers();
+    } catch {
+      toast({ title: "Erro ao alterar permissão", variant: "destructive" });
+    }
+  };
+
+  const handleToggleObs = async (userId: string, grant: boolean) => {
+    try {
+      await callAdmin({ action: "toggle_obs", user_id: userId, grant });
+      toast({ title: grant ? "OBS liberado" : "OBS removido" });
       loadUsers();
     } catch {
       toast({ title: "Erro ao alterar permissão", variant: "destructive" });
@@ -588,6 +599,11 @@ const AdminPanel = () => {
                               : <FileX className="h-4 w-4 text-muted-foreground" />}
                           </Button>
                           <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg"
+                            onClick={() => handleToggleObs(user.id, !user.has_obs)}
+                            title={user.has_obs ? "Remover acesso ao OBS" : "Liberar OBS"}>
+                            <Tv2 className={`h-4 w-4 ${user.has_obs ? "text-blue-500" : "text-muted-foreground"}`} />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg"
                             onClick={() => { setExpirationTarget(user); setExpirationDays(""); }}
                             title="Definir validade">
                             <CalendarClock className="h-4 w-4 text-yellow-500" />
@@ -658,6 +674,10 @@ const AdminPanel = () => {
                           <Button variant="ghost" size="sm" className={`h-8 rounded-lg text-xs ${user.has_comprovante ? "text-teal-500" : "text-muted-foreground"}`}
                             onClick={() => handleToggleComprovante(user.id, !user.has_comprovante)}>
                             {user.has_comprovante ? <FileCheck className="h-3.5 w-3.5" /> : <FileX className="h-3.5 w-3.5" />}
+                          </Button>
+                          <Button variant="ghost" size="sm" className={`h-8 rounded-lg text-xs ${user.has_obs ? "text-blue-500" : "text-muted-foreground"}`}
+                            onClick={() => handleToggleObs(user.id, !user.has_obs)}>
+                            <Tv2 className="h-3.5 w-3.5" />
                           </Button>
                           <Button variant="ghost" size="sm" className="h-8 rounded-lg text-xs text-yellow-500"
                             onClick={() => { setExpirationTarget(user); setExpirationDays(""); }}>

@@ -129,7 +129,7 @@ function SortableTransaction({
 
 /* ── Main component ──────────────────────────────────────── */
 
-const ExtratoGenerator = ({ showComprovante = false }: { showComprovante?: boolean }) => {
+const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showComprovante?: boolean; showObs?: boolean }) => {
   const { user } = useAuth();
   const [sendingToObs, setSendingToObs] = useState(false);
 
@@ -337,7 +337,7 @@ const ExtratoGenerator = ({ showComprovante = false }: { showComprovante?: boole
           </div>
 
           {/* User OBS Link */}
-          {user && (
+          {user && showObs && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
               <label className="block text-xs font-semibold text-blue-800 mb-1">Seu Link do OBS</label>
               <div className="flex gap-2">
@@ -483,13 +483,15 @@ const ExtratoGenerator = ({ showComprovante = false }: { showComprovante?: boole
 
               {/* Action buttons */}
               <div className="flex gap-2">
-                <button
-                  onClick={sendToObs}
-                  disabled={sendingToObs}
-                  className="flex-1 flex items-center justify-center gap-2 bg-blue-600 text-white rounded-lg py-2.5 text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
-                >
-                  <Send size={16} /> {sendingToObs ? "Enviando..." : "Mandar pra Tela"}
-                </button>
+                {showObs && (
+                  <button
+                    onClick={sendToObs}
+                    disabled={sendingToObs}
+                    className="flex-1 flex items-center justify-center gap-2 bg-blue-600 text-white rounded-lg py-2.5 text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  >
+                    <Send size={16} /> {sendingToObs ? "Enviando..." : "Mandar pra Tela"}
+                  </button>
+                )}
                 <button
                   onClick={handleExport}
                   disabled={exporting}
@@ -556,13 +558,15 @@ const ExtratoGenerator = ({ showComprovante = false }: { showComprovante?: boole
                 >
                   <Plus size={16} /> Adicionar
                 </button>
-                <button
-                  onClick={sendToObs}
-                  disabled={sendingToObs}
-                  className="flex-1 flex items-center justify-center gap-2 bg-blue-600 text-white rounded-lg py-2.5 text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
-                >
-                  <Send size={16} /> {sendingToObs ? "Enviando..." : "Tela"}
-                </button>
+                {showObs && (
+                  <button
+                    onClick={sendToObs}
+                    disabled={sendingToObs}
+                    className="flex-1 flex items-center justify-center gap-2 bg-blue-600 text-white rounded-lg py-2.5 text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  >
+                    <Send size={16} /> {sendingToObs ? "Enviando..." : "Tela"}
+                  </button>
+                )}
                 <button
                   onClick={handleExport}
                   disabled={exporting}

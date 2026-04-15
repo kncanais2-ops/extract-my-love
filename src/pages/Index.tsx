@@ -13,6 +13,7 @@ const Index = () => {
   const { theme, setTheme } = useTheme();
   const [isAdmin, setIsAdmin] = useState(false);
   const [hasComprovante, setHasComprovante] = useState(false);
+  const [hasObs, setHasObs] = useState(false);
   const [daysLeft, setDaysLeft] = useState<number | null>(null);
 
   useEffect(() => {
@@ -30,6 +31,13 @@ const Index = () => {
       });
       // Admin sempre tem acesso ao comprovante
       setHasComprovante(!!admin || !!comprovante);
+
+      const { data: obs } = await supabase.rpc("has_role", {
+        _user_id: session.user.id,
+        _role: "obs",
+      });
+      // Admin sempre tem acesso ao OBS
+      setHasObs(!!admin || !!obs);
     };
     checkRoles();
   }, [session]);
@@ -161,7 +169,7 @@ const Index = () => {
 
       {/* Main */}
       <main className="flex-1 py-4">
-        <ExtratoGenerator showComprovante={hasComprovante} />
+        <ExtratoGenerator showComprovante={hasComprovante} showObs={hasObs} />
       </main>
 
       {/* Footer */}
