@@ -12,6 +12,7 @@ import Login from "./pages/Login.tsx";
 import AdminPanel from "./pages/AdminPanel.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import ObsOverlay from "./pages/ObsOverlay.tsx";
+import ForceLogout from "./pages/ForceLogout.tsx";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ const App = () => (
           <AuthProvider>
             <Routes>
               <Route path="/login" element={<Login />} />
+              <Route path="/logout" element={<ForceLogout />} />
               <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
               <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
               <Route path="/live/:id" element={<ObsOverlay />} />
