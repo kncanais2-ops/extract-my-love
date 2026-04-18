@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import {
   Plus, Trash2, MoreHorizontal, MoreVertical, Download,
   ArrowDownLeft, ArrowDownRight, GripVertical, ArrowUpRight, Copy, RotateCcw, ClipboardCheck, Dices, Send
@@ -73,7 +73,7 @@ const maskTime = (val: string) => {
 
 /* ── Sortable transaction card ─────────────────────────── */
 function SortableTransaction({
-  t, i, total, bank, onRemove, onUpdate, onDuplicate, onRandomize
+  t, i, total, bank, onRemove, onUpdate, onDuplicate, onRandomize, isDuplicate = false,
 }: {
   t: Transaction;
   i: number;
@@ -83,6 +83,7 @@ function SortableTransaction({
   onUpdate: (id: string, field: keyof Transaction, val: string) => void;
   onDuplicate: (id: string) => void;
   onRandomize: (id: string) => void;
+  isDuplicate?: boolean;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: t.id });
   const style = { transform: CSS.Transform.toString(transform), transition };
@@ -127,7 +128,11 @@ function SortableTransaction({
           value={t.name}
           maxLength={60}
           onChange={(e) => onUpdate(t.id, "name", e.target.value)}
-          className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors"
+          className={`flex-1 bg-background border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 transition-colors ${
+            isDuplicate
+              ? "border-destructive ring-1 ring-destructive/40 focus:ring-destructive"
+              : "border-border focus:ring-ring"
+          }`}
         />
         <button
           onClick={() => onRandomize(t.id)}
@@ -137,6 +142,9 @@ function SortableTransaction({
           <Dices size={16} />
         </button>
       </div>
+      {isDuplicate && (
+        <p className="text-xs text-destructive -mt-1">Nome duplicado — altere para continuar</p>
+      )}
       <input
         type="text"
         placeholder="R$ 0,00"
@@ -180,6 +188,7 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
       toast.error("Você precisa estar logado para enviar para o OBS!");
       return;
     }
+    if (hasDuplicateNames) { warnDuplicate(); return; }
     setSendingToObs(true);
     try {
       const channel = supabase.channel('obs-' + user.id);
@@ -231,6 +240,26 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
 
   const isPixMode = bank === "pix-comprovante";
   const visibleBanks = showComprovante ? BANKS : BANKS.filter((b) => b.id !== "pix-comprovante");
+
+  const duplicateNameIds = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const t of transactions) {
+      const key = t.name.trim().toLowerCase();
+      if (!key) continue;
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    const dups = new Set<string>();
+    for (const t of transactions) {
+      const key = t.name.trim().toLowerCase();
+      if (key && (counts.get(key) ?? 0) > 1) dups.add(t.id);
+    }
+    return dups;
+  }, [transactions]);
+  const hasDuplicateNames = !isPixMode && duplicateNameIds.size > 0;
+
+  const warnDuplicate = () => {
+    toast.error("Existem nomes duplicados nas transações. Corrija antes de continuar.");
+  };
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -307,6 +336,7 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
 
   const handleExport = async () => {
     if (!extratoRef.current || exporting) return;
+    if (hasDuplicateNames) { warnDuplicate(); return; }
     setExporting(true);
     try {
       const canvas = await html2canvas(extratoRef.current, {
@@ -324,6 +354,7 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
 
   const handleCopyClipboard = async () => {
     if (!extratoRef.current || copied) return;
+    if (hasDuplicateNames) { warnDuplicate(); return; }
     try {
       const canvas = await html2canvas(extratoRef.current, {
         backgroundColor: isDarkBank ? "#1a1a1a" : "#ffffff",
@@ -581,6 +612,7 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
                         onUpdate={updateTransaction}
                         onDuplicate={duplicateTransaction}
                         onRandomize={randomizeTransaction}
+                        isDuplicate={duplicateNameIds.has(t.id)}
                       />
                     ))}
                   </div>
