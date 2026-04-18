@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 import {
   Plus, Trash2, MoreHorizontal, MoreVertical, Download,
   ArrowDownLeft, ArrowDownRight, GripVertical, ArrowUpRight, Copy, RotateCcw, ClipboardCheck, Dices, Send
@@ -164,14 +164,23 @@ function SortableTransaction({
         </select>
       )}
       {showTime && (
-        <input
-          type="text"
-          inputMode="numeric"
-          placeholder="Horário (ex: 23:10)"
-          value={t.time}
-          onChange={(e) => onUpdate(t.id, "time", maskTime(e.target.value))}
-          className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors"
-        />
+        <div className="flex gap-2">
+          <input
+            type="text"
+            inputMode="numeric"
+            placeholder="Horário (ex: 23:10)"
+            value={t.time}
+            onChange={(e) => onUpdate(t.id, "time", maskTime(e.target.value))}
+            className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors"
+          />
+          <button
+            onClick={() => onUpdate(t.id, "time", getBrasiliaTime())}
+            className="shrink-0 bg-background border border-border rounded-lg px-3 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            title="Atualizar para horário de Brasília"
+          >
+            <RotateCcw size={16} />
+          </button>
+        </div>
       )}
     </div>
   );
@@ -266,7 +275,64 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
+  const historyRef = useRef<{ past: Transaction[][]; future: Transaction[][]; lastPushAt: number }>({
+    past: [],
+    future: [],
+    lastPushAt: 0,
+  });
+  const HISTORY_LIMIT = 50;
+  const DEBOUNCE_MS = 500;
+
+  const pushHistory = (snapshot: Transaction[], immediate: boolean) => {
+    const h = historyRef.current;
+    const now = Date.now();
+    if (!immediate && now - h.lastPushAt < DEBOUNCE_MS) return;
+    h.past.push(snapshot);
+    if (h.past.length > HISTORY_LIMIT) h.past.shift();
+    h.future = [];
+    h.lastPushAt = now;
+  };
+
+  const undo = () => {
+    setTransactions((current) => {
+      const h = historyRef.current;
+      if (h.past.length === 0) return current;
+      const previous = h.past.pop()!;
+      h.future.push(current);
+      h.lastPushAt = 0;
+      return previous;
+    });
+  };
+
+  const redo = () => {
+    setTransactions((current) => {
+      const h = historyRef.current;
+      if (h.future.length === 0) return current;
+      const next = h.future.pop()!;
+      h.past.push(current);
+      h.lastPushAt = 0;
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const meta = e.ctrlKey || e.metaKey;
+      if (!meta) return;
+      const target = e.target as HTMLElement | null;
+      const tag = target?.tagName;
+      const inField = tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || target?.isContentEditable;
+      if (inField) return;
+      const key = e.key.toLowerCase();
+      if (key === "z" && !e.shiftKey) { e.preventDefault(); undo(); }
+      else if ((key === "z" && e.shiftKey) || key === "y") { e.preventDefault(); redo(); }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
+
   const addTransaction = () => {
+    pushHistory(transactions, true);
     setTransactions((prev) => [
       ...prev,
       { id: Date.now().toString(), name: "", value: "", category: "Sem categoria", time: getBrasiliaTime() },
@@ -274,6 +340,7 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
   };
 
   const duplicateTransaction = (id: string) => {
+    pushHistory(transactions, true);
     setTransactions((prev) => {
       const source = prev.find((t) => t.id === id);
       if (!source) return prev;
@@ -287,10 +354,12 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
 
   const removeTransaction = (id: string) => {
     if (transactions.length <= 1) return;
+    pushHistory(transactions, true);
     setTransactions((prev) => prev.filter((t) => t.id !== id));
   };
 
   const clearAll = () => {
+    pushHistory(transactions, true);
     setTransactions([
       { id: Date.now().toString(), name: "", value: "", category: "Sem categoria", time: getBrasiliaTime() },
     ]);
@@ -305,9 +374,10 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
     const ln = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)];
     let ln2 = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)];
     if (ln === ln2) ln2 = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)];
-    
+
     const newName = `${fn} ${ln} ${ln2}`.trim();
 
+    pushHistory(transactions, true);
     setTransactions((prev) =>
       prev.map((t) => (t.id === id ? { ...t, name: newName } : t))
     );
@@ -318,6 +388,7 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
     if (field === "name") sanitized = val.slice(0, 60);
     if (field === "value") sanitized = val.replace(/\D/g, "").slice(0, 12);
     if (field === "time") sanitized = val.replace(/[^0-9:]/g, "").slice(0, 5);
+    pushHistory(transactions, false);
     setTransactions((prev) =>
       prev.map((t) => (t.id === id ? { ...t, [field]: sanitized } : t))
     );
@@ -326,6 +397,7 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (over && active.id !== over.id) {
+      pushHistory(transactions, true);
       setTransactions((prev) => {
         const oldIndex = prev.findIndex((t) => t.id === active.id);
         const newIndex = prev.findIndex((t) => t.id === over.id);
