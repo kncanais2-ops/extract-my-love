@@ -30,6 +30,47 @@ import {
   PreviewMercadoPago, PreviewEfi, PreviewInfinitePay, PreviewPixComprovante
 } from "./SharedPreviews";
 
+/* ── Brasília time helpers ─────────────────────────────── */
+const getBrasiliaParts = () => {
+  const parts = new Intl.DateTimeFormat("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    day: "2-digit", month: "2-digit", year: "numeric",
+    hour: "2-digit", minute: "2-digit", second: "2-digit",
+    hour12: false,
+  }).formatToParts(new Date());
+  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "";
+  return { day: get("day"), month: get("month"), year: get("year"), hour: get("hour"), minute: get("minute"), second: get("second") };
+};
+
+const getBrasiliaDateTime = () => {
+  const p = getBrasiliaParts();
+  return `${p.day}/${p.month}/${p.year} - ${p.hour}:${p.minute}:${p.second}`;
+};
+
+const getBrasiliaTime = () => {
+  const p = getBrasiliaParts();
+  return `${p.hour}:${p.minute}`;
+};
+
+const maskDataHora = (val: string) => {
+  const d = val.replace(/\D/g, "").slice(0, 14);
+  if (d.length === 0) return "";
+  let out = d.slice(0, 2);
+  if (d.length > 2) out += "/" + d.slice(2, 4);
+  if (d.length > 4) out += "/" + d.slice(4, 8);
+  if (d.length > 8) out += " - " + d.slice(8, 10);
+  if (d.length > 10) out += ":" + d.slice(10, 12);
+  if (d.length > 12) out += ":" + d.slice(12, 14);
+  return out;
+};
+
+const maskTime = (val: string) => {
+  const d = val.replace(/\D/g, "").slice(0, 4);
+  if (d.length === 0) return "";
+  if (d.length <= 2) return d;
+  return d.slice(0, 2) + ":" + d.slice(2);
+};
+
 /* ── Sortable transaction card ─────────────────────────── */
 function SortableTransaction({
   t, i, total, bank, onRemove, onUpdate, onDuplicate, onRandomize
@@ -117,9 +158,10 @@ function SortableTransaction({
       {showTime && (
         <input
           type="text"
+          inputMode="numeric"
           placeholder="Horário (ex: 23:10)"
           value={t.time}
-          onChange={(e) => onUpdate(t.id, "time", e.target.value)}
+          onChange={(e) => onUpdate(t.id, "time", maskTime(e.target.value))}
           className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-colors"
         />
       )}
@@ -156,34 +198,11 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
 
   const [bank, setBank] = useState<BankType>("inter");
   const [transactions, setTransactions] = useState<Transaction[]>([
-    { id: "1", name: "", value: "", category: "Sem categoria", time: "23:10" },
+    { id: "1", name: "", value: "", category: "Sem categoria", time: getBrasiliaTime() },
   ]);
   const [dateLabel, setDateLabel] = useState(
     "Hoje, " + new Date().toLocaleDateString("pt-BR", { day: "numeric", month: "long" })
   );
-
-  const getBrasiliaDateTime = () => {
-    const parts = new Intl.DateTimeFormat("pt-BR", {
-      timeZone: "America/Sao_Paulo",
-      day: "2-digit", month: "2-digit", year: "numeric",
-      hour: "2-digit", minute: "2-digit", second: "2-digit",
-      hour12: false,
-    }).formatToParts(new Date());
-    const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "";
-    return `${get("day")}/${get("month")}/${get("year")} - ${get("hour")}:${get("minute")}:${get("second")}`;
-  };
-
-  const maskDataHora = (val: string) => {
-    const d = val.replace(/\D/g, "").slice(0, 14);
-    if (d.length === 0) return "";
-    let out = d.slice(0, 2);
-    if (d.length > 2) out += "/" + d.slice(2, 4);
-    if (d.length > 4) out += "/" + d.slice(4, 8);
-    if (d.length > 8) out += " - " + d.slice(8, 10);
-    if (d.length > 10) out += ":" + d.slice(10, 12);
-    if (d.length > 12) out += ":" + d.slice(12, 14);
-    return out;
-  };
   const extratoRef = useRef<HTMLDivElement>(null);
   const [exporting, setExporting] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -221,7 +240,7 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
   const addTransaction = () => {
     setTransactions((prev) => [
       ...prev,
-      { id: Date.now().toString(), name: "", value: "", category: "Sem categoria", time: "23:10" },
+      { id: Date.now().toString(), name: "", value: "", category: "Sem categoria", time: getBrasiliaTime() },
     ]);
   };
 
@@ -244,7 +263,7 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
 
   const clearAll = () => {
     setTransactions([
-      { id: Date.now().toString(), name: "", value: "", category: "Sem categoria", time: "23:10" },
+      { id: Date.now().toString(), name: "", value: "", category: "Sem categoria", time: getBrasiliaTime() },
     ]);
     setDateLabel("Hoje, " + new Date().toLocaleDateString("pt-BR", { day: "numeric", month: "long" }));
   };
