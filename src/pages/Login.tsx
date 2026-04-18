@@ -29,6 +29,7 @@ const Login = () => {
   const draggingRef = useRef(false);
   const startYRef = useRef(0);
   const pullRef = useRef(0);
+  const fingerprintRef = useRef<Promise<string> | null>(null);
 
   const setPull = (value: number) => {
     const clamped = Math.max(0, Math.min(MAX_PULL, value));
@@ -85,6 +86,10 @@ const Login = () => {
   };
 
   useEffect(() => {
+    fingerprintRef.current = getFingerprint();
+  }, []);
+
+  useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => onMove(e.clientY);
     const handleTouchMove = (e: TouchEvent) => onMove(e.touches[0].clientY);
     window.addEventListener("mousemove", handleMouseMove);
@@ -120,7 +125,7 @@ const Login = () => {
     setLoading(true);
     setBlocked(false);
 
-    const fingerprint = await getFingerprint();
+    const fingerprintPromise = fingerprintRef.current ?? getFingerprint();
 
     const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password });
 
@@ -136,11 +141,14 @@ const Login = () => {
 
     const user = authData.user;
 
-    const { data: device } = await supabase
-      .from("authorized_devices")
-      .select("fingerprint")
-      .eq("user_id", user.id)
-      .single();
+    const [fingerprint, deviceRes, subRes] = await Promise.all([
+      fingerprintPromise,
+      supabase.from("authorized_devices").select("fingerprint").eq("user_id", user.id).single(),
+      supabase.from("user_subscriptions").select("expires_at").eq("user_id", user.id).single(),
+    ]);
+
+    const device = deviceRes.data;
+    const subscription = subRes.data;
 
     if (device) {
       if (device.fingerprint !== fingerprint) {
@@ -150,18 +158,12 @@ const Login = () => {
         return;
       }
     } else {
-      await supabase.from("authorized_devices").insert({
+      void supabase.from("authorized_devices").insert({
         user_id: user.id,
         fingerprint,
         device_label: navigator.userAgent.slice(0, 100),
       });
     }
-
-    const { data: subscription } = await supabase
-      .from("user_subscriptions")
-      .select("expires_at")
-      .eq("user_id", user.id)
-      .single();
 
     if (subscription) {
       const expiresAt = new Date(subscription.expires_at);
@@ -173,23 +175,24 @@ const Login = () => {
       }
     }
 
-    await supabase.auth.signOut({ scope: "others" as "global" });
+    void supabase.auth.signOut({ scope: "others" as "global" });
 
-    try {
-      const geo = await getGeoIP();
-      await supabase.from("login_logs").insert({
-        user_id: user.id,
-        ip_address: geo.ip,
-        region: geo.region,
-        city: geo.city,
-        country: geo.country,
-        isp: geo.isp,
-      });
-    } catch (geoErr) {
-      console.error("Erro ao registrar login:", geoErr);
-    }
+    void (async () => {
+      try {
+        const geo = await getGeoIP();
+        await supabase.from("login_logs").insert({
+          user_id: user.id,
+          ip_address: geo.ip,
+          region: geo.region,
+          city: geo.city,
+          country: geo.country,
+          isp: geo.isp,
+        });
+      } catch (geoErr) {
+        console.error("Erro ao registrar login:", geoErr);
+      }
+    })();
 
-    setLoading(false);
     navigate("/");
   };
 
@@ -237,9 +240,6 @@ const Login = () => {
         </div>
 
         <form className="login-card" onSubmit={handleLogin} autoComplete="off">
-          <h1>Welcome</h1>
-          <p className="subtitle">Entre para continuar</p>
-
           {expired ? (
             <div className="status-view">
               <svg className="status-icon warn" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -298,12 +298,6 @@ const Login = () => {
               <button type="submit" disabled={loading}>
                 <span>{loading ? "Verificando..." : "Entrar"}</span>
               </button>
-
-              {!lit && (
-                <p className="login-error" style={{ background: "transparent", border: "none", color: "#a9a391" }}>
-                  Puxe o cordão da lâmpada para começar
-                </p>
-              )}
             </>
           )}
         </form>
