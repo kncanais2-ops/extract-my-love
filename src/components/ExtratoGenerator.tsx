@@ -161,6 +161,29 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
   const [dateLabel, setDateLabel] = useState(
     "Hoje, " + new Date().toLocaleDateString("pt-BR", { day: "numeric", month: "long" })
   );
+
+  const getBrasiliaDateTime = () => {
+    const parts = new Intl.DateTimeFormat("pt-BR", {
+      timeZone: "America/Sao_Paulo",
+      day: "2-digit", month: "2-digit", year: "numeric",
+      hour: "2-digit", minute: "2-digit", second: "2-digit",
+      hour12: false,
+    }).formatToParts(new Date());
+    const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "";
+    return `${get("day")}/${get("month")}/${get("year")} - ${get("hour")}:${get("minute")}:${get("second")}`;
+  };
+
+  const maskDataHora = (val: string) => {
+    const d = val.replace(/\D/g, "").slice(0, 14);
+    if (d.length === 0) return "";
+    let out = d.slice(0, 2);
+    if (d.length > 2) out += "/" + d.slice(2, 4);
+    if (d.length > 4) out += "/" + d.slice(4, 8);
+    if (d.length > 8) out += " - " + d.slice(8, 10);
+    if (d.length > 10) out += ":" + d.slice(10, 12);
+    if (d.length > 12) out += ":" + d.slice(12, 14);
+    return out;
+  };
   const extratoRef = useRef<HTMLDivElement>(null);
   const [exporting, setExporting] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -174,7 +197,7 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
     cpfRecebedor: "",
     instituicaoPagador: "",
     instituicaoRecebedor: "",
-    dataHora: "",
+    dataHora: getBrasiliaDateTime(),
     idTransacao: generatePixId(),
   });
 
@@ -183,6 +206,7 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
     if (field === "valor") sanitized = val.replace(/\D/g, "").slice(0, 12);
     if (field === "cpfPagador" || field === "cpfRecebedor") sanitized = val.replace(/\D/g, "").slice(0, 11);
     if (field === "cnpjPagador") sanitized = val.replace(/\D/g, "").slice(0, 14);
+    if (field === "dataHora") sanitized = maskDataHora(val);
     setPixData((prev) => ({ ...prev, [field]: sanitized }));
   };
 
