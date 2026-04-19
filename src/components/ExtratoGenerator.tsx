@@ -367,28 +367,66 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
   };
 
   const randomizeTransaction = (id: string) => {
-    const FIRST_NAMES = ["Lucas", "Marcos", "Mateus", "João", "Gabriel", "Pedro", "Thiago", "Felipe", "Rafael", "Vinícius", "Bruno", "Caio", "Arthur", "Gustavo", "Eduardo", "Diego", "Ricardo", "Renato", "Fernando", "Guilherme", "Leonardo", "Rodrigo", "Juliana", "Mariana", "Fernanda", "Amanda", "Beatriz", "Camila", "Letícia", "Carolina", "Larissa", "Natália"];
-    const LAST_NAMES = ["Silva", "Santos", "Oliveira", "Souza", "Rodrigues", "Ferreira", "Alves", "Pereira", "Lima", "Gomes", "Costa", "Ribeiro", "Martins", "Carvalho", "Almeida", "Lopes", "Soares", "Fernandes", "Vieira", "Barbosa", "Rocha", "Dias", "Mendes", "Nunes", "Cardoso"];
+    const FIRST_NAMES = [
+      "Lucas", "Marcos", "Mateus", "João", "Gabriel", "Pedro", "Thiago", "Felipe", "Rafael", "Vinícius",
+      "Bruno", "Caio", "Arthur", "Gustavo", "Eduardo", "Diego", "Ricardo", "Renato", "Fernando", "Guilherme",
+      "Leonardo", "Rodrigo", "André", "Daniel", "Henrique", "Igor", "Murilo", "Otávio", "Paulo", "Rogério",
+      "Samuel", "Sérgio", "Tiago", "Vitor", "Wesley", "Yuri", "Anderson", "Adriano", "Alexandre", "Antônio",
+      "Augusto", "Benjamin", "Bernardo", "Cauã", "César", "Cláudio", "Cristiano", "Davi", "Demétrio", "Édson",
+      "Elias", "Emanuel", "Enzo", "Erick", "Estevão", "Fábio", "Francisco", "Heitor", "Hugo", "Iago",
+      "Ivan", "Joaquim", "Jorge", "José", "Júlio", "Kaique", "Kauã", "Levi", "Lourenço", "Luan",
+      "Luiz", "Manoel", "Márcio", "Mário", "Maurício", "Miguel", "Nathan", "Nicolas", "Noé", "Osvaldo",
+      "Patrick", "Pietro", "Rafa", "Raul", "Reinaldo", "Renan", "Robson", "Ronaldo", "Saulo", "Sebastião",
+      "Silas", "Theo", "Túlio", "Valdir", "Valentim", "Wagner", "Washington", "Wellington", "Wilson", "Xavier",
+      "Juliana", "Mariana", "Fernanda", "Amanda", "Beatriz", "Camila", "Letícia", "Carolina", "Larissa", "Natália",
+      "Adriana", "Alessandra", "Alice", "Aline", "Ana", "Andressa", "Anita", "Bárbara", "Bianca", "Brenda",
+      "Bruna", "Carla", "Catarina", "Cecília", "Clara", "Cláudia", "Cristina", "Dáfne", "Daniela", "Débora",
+      "Denise", "Eduarda", "Elaine", "Eliana", "Elisa", "Eloá", "Emanuelle", "Esther", "Fabiana", "Flávia",
+      "Gabriela", "Giovanna", "Helena", "Heloísa", "Isabela", "Isadora", "Jade", "Jaqueline", "Júlia", "Karina",
+      "Kátia", "Laís", "Lara", "Laura", "Lavínia", "Lívia", "Lorena", "Luana", "Lúcia", "Luiza",
+      "Maitê", "Manuela", "Márcia", "Maria", "Marina", "Melissa", "Michele", "Milena", "Mirella", "Monique",
+      "Nicole", "Olívia", "Patrícia", "Paula", "Priscila", "Rafaela", "Raquel", "Rebeca", "Regina", "Renata",
+      "Roberta", "Rosa", "Sabrina", "Sara", "Simone", "Sofia", "Stella", "Tainá", "Talita", "Tamara",
+      "Tatiana", "Thais", "Valentina", "Vanessa", "Vera", "Verônica", "Vitória", "Yasmin", "Zara", "Zoe"
+    ];
+    const LAST_NAMES = [
+      "Silva", "Santos", "Oliveira", "Souza", "Rodrigues", "Ferreira", "Alves", "Pereira", "Lima", "Gomes",
+      "Costa", "Ribeiro", "Martins", "Carvalho", "Almeida", "Lopes", "Soares", "Fernandes", "Vieira", "Barbosa",
+      "Rocha", "Dias", "Mendes", "Nunes", "Cardoso", "Ramos", "Moreira", "Araújo", "Cavalcanti", "Castro",
+      "Correia", "Cunha", "Freitas", "Pinto", "Moura", "Teixeira", "Borges", "Andrade", "Campos", "Machado",
+      "Monteiro", "Macedo", "Sales", "Tavares", "Coelho", "Bezerra", "Brito", "Caldeira", "Câmara", "Aragão",
+      "Assis", "Azevedo", "Bandeira", "Barros", "Batista", "Beltrão", "Bittencourt", "Bonfim", "Braga", "Brandão",
+      "Cabral", "Caetano", "Caminha", "Camargo", "Cardim", "Carneiro", "Carrasco", "Chaves", "Coutinho", "Cordeiro",
+      "Damasceno", "Delgado", "Dantas", "Domingues", "Drummond", "Duarte", "Esteves", "Fagundes", "Falcão", "Farias",
+      "Figueiredo", "Fonseca", "Fontoura", "Furtado", "Galvão", "Garcia", "Godoy", "Gonçalves", "Guerra", "Guimarães",
+      "Holanda", "Jardim", "Junqueira", "Lacerda", "Leal", "Leite", "Lemos", "Linhares", "Loureiro", "Maciel",
+      "Magalhães", "Maia", "Marinho", "Marques", "Matos", "Medeiros", "Meireles", "Melo", "Miranda", "Montenegro",
+      "Morais", "Negrão", "Neves", "Novaes", "Otoni", "Pacheco", "Padilha", "Paes", "Paiva", "Palhares",
+      "Passos", "Peixoto", "Pena", "Penido", "Pessoa", "Pimentel", "Pires", "Pontes", "Porto", "Prado",
+      "Queiroz", "Quintela", "Rangel", "Rebelo", "Reis", "Resende", "Rezende", "Rocheid", "Saldanha", "Salgado",
+      "Sampaio", "Sandoval", "Sant'Ana", "Saraiva", "Schmidt", "Sepúlveda", "Serpa", "Serra", "Sertão", "Siqueira",
+      "Sodré", "Tamburini", "Tinoco", "Toledo", "Torres", "Trindade", "Vargas", "Vasconcelos", "Vaz", "Vega",
+      "Veloso", "Veras", "Vergara", "Verissimo", "Vidal", "Vilar", "Vilela", "Xavier", "Zaccaria", "Zanetti"
+    ];
 
+    const usedFirsts = new Set<string>();
     const usedSurnames = new Set<string>();
     transactions.forEach((t) => {
       if (t.id === id) return;
-      t.name
-        .trim()
-        .split(/\s+/)
-        .slice(1)
-        .forEach((tok) => usedSurnames.add(tok.toLowerCase()));
+      const tokens = t.name.trim().split(/\s+/).filter(Boolean);
+      if (tokens.length > 0) usedFirsts.add(tokens[0].toLowerCase());
+      tokens.slice(1).forEach((tok) => usedSurnames.add(tok.toLowerCase()));
     });
 
-    const pickSurname = (exclude: Set<string>) => {
-      const pool = LAST_NAMES.filter((s) => !exclude.has(s.toLowerCase()));
-      const arr = pool.length > 0 ? pool : LAST_NAMES;
+    const pickFrom = (list: string[], exclude: Set<string>) => {
+      const pool = list.filter((s) => !exclude.has(s.toLowerCase()));
+      const arr = pool.length > 0 ? pool : list;
       return arr[Math.floor(Math.random() * arr.length)];
     };
 
-    const fn = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)];
-    const ln = pickSurname(usedSurnames);
-    const ln2 = pickSurname(new Set([...usedSurnames, ln.toLowerCase()]));
+    const fn = pickFrom(FIRST_NAMES, usedFirsts);
+    const ln = pickFrom(LAST_NAMES, usedSurnames);
+    const ln2 = pickFrom(LAST_NAMES, new Set([...usedSurnames, ln.toLowerCase()]));
 
     const newName = `${fn} ${ln} ${ln2}`.trim();
 
