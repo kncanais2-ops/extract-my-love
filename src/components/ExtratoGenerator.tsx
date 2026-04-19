@@ -438,7 +438,7 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
 
   const updateTransaction = (id: string, field: keyof Transaction, val: string) => {
     let sanitized = val;
-    if (field === "name") sanitized = val.slice(0, 60);
+    if (field === "name") sanitized = val.replace(/[^\p{L}\d\s.\-/'&]/gu, "").slice(0, 60);
     if (field === "value") sanitized = val.replace(/\D/g, "").slice(0, 12);
     if (field === "time") sanitized = val.replace(/[^0-9:]/g, "").slice(0, 5);
     pushHistory(transactions, false);
