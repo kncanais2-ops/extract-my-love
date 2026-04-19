@@ -370,10 +370,25 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
     const FIRST_NAMES = ["Lucas", "Marcos", "Mateus", "João", "Gabriel", "Pedro", "Thiago", "Felipe", "Rafael", "Vinícius", "Bruno", "Caio", "Arthur", "Gustavo", "Eduardo", "Diego", "Ricardo", "Renato", "Fernando", "Guilherme", "Leonardo", "Rodrigo", "Juliana", "Mariana", "Fernanda", "Amanda", "Beatriz", "Camila", "Letícia", "Carolina", "Larissa", "Natália"];
     const LAST_NAMES = ["Silva", "Santos", "Oliveira", "Souza", "Rodrigues", "Ferreira", "Alves", "Pereira", "Lima", "Gomes", "Costa", "Ribeiro", "Martins", "Carvalho", "Almeida", "Lopes", "Soares", "Fernandes", "Vieira", "Barbosa", "Rocha", "Dias", "Mendes", "Nunes", "Cardoso"];
 
+    const usedSurnames = new Set<string>();
+    transactions.forEach((t) => {
+      if (t.id === id) return;
+      t.name
+        .trim()
+        .split(/\s+/)
+        .slice(1)
+        .forEach((tok) => usedSurnames.add(tok.toLowerCase()));
+    });
+
+    const pickSurname = (exclude: Set<string>) => {
+      const pool = LAST_NAMES.filter((s) => !exclude.has(s.toLowerCase()));
+      const arr = pool.length > 0 ? pool : LAST_NAMES;
+      return arr[Math.floor(Math.random() * arr.length)];
+    };
+
     const fn = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)];
-    const ln = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)];
-    let ln2 = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)];
-    if (ln === ln2) ln2 = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)];
+    const ln = pickSurname(usedSurnames);
+    const ln2 = pickSurname(new Set([...usedSurnames, ln.toLowerCase()]));
 
     const newName = `${fn} ${ln} ${ln2}`.trim();
 
