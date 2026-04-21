@@ -182,7 +182,7 @@ export function PreviewPicPay({ transactions, dateLabel }: { transactions: Trans
   return (
     <div className="py-2">
       {dateLabel && (
-        <p className="text-xs font-bold px-4 pt-2 pb-3" style={{ color: "#21C25E" }}>{dateLabel}</p>
+        <p className="text-xs font-bold px-4 pt-2 pb-3" style={{ color: "#9a9a9a" }}>{dateLabel}</p>
       )}
       {transactions.map((t, i) => (
         <div key={t.id} className="flex items-center px-4 py-3"
