@@ -192,15 +192,15 @@ export function PreviewPicPay({ transactions, dateLabel }: { transactions: Trans
             <PicPayPixIcon size={26} color="#1a1a1a" />
           </div>
           <div className="flex-1 ml-3 min-w-0">
-            <p className="text-sm font-bold" style={{ color: "#1a1a1a" }}>Pix recebido</p>
-            <p className="text-sm mt-0.5 truncate" style={{ color: "#1a1a1a", textTransform: "uppercase" }}>
+            <p className="text-sm font-bold" style={{ color: "#1a1a1a", lineHeight: 1.4 }}>Pix recebido</p>
+            <p className="text-sm mt-0.5" style={{ color: "#1a1a1a", textTransform: "uppercase", lineHeight: 1.4, wordBreak: "break-word" }}>
               {t.name || "Nome da pessoa"}
             </p>
             <div className="flex items-center justify-between mt-1">
-              <span className="text-xs" style={{ color: "#9a9a9a" }}>{t.time}</span>
-              <div className="flex items-center gap-1">
-                <span className="text-sm font-bold" style={{ color: "#21A85A" }}>{formatCurrencyPlus(t.value)}</span>
-                <ChevronRight size={16} style={{ color: "#9a9a9a" }} />
+              <span className="text-xs" style={{ color: "#9a9a9a", lineHeight: 1.4 }}>{t.time}</span>
+              <div className="flex items-center gap-1 shrink-0">
+                <span className="text-sm font-bold" style={{ color: "#21A85A", lineHeight: 1.4 }}>{formatCurrencyPlus(t.value)}</span>
+                <ChevronRight size={16} className="shrink-0" style={{ color: "#9a9a9a" }} />
               </div>
             </div>
           </div>
