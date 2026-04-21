@@ -1,5 +1,5 @@
 import {
-  MoreHorizontal, MoreVertical, ArrowDownLeft, ArrowDownRight, ArrowUpRight, ChevronRight
+  MoreHorizontal, MoreVertical, ArrowDownLeft, ArrowDownRight, ArrowUpRight
 } from "lucide-react";
 
 function PicPayPixIcon({ size = 24, color = "#1a1a1a" }: { size?: number; color?: string }) {
@@ -198,9 +198,11 @@ export function PreviewPicPay({ transactions, dateLabel }: { transactions: Trans
             </p>
             <div className="flex items-center justify-between mt-1">
               <span className="text-xs" style={{ color: "#9a9a9a", lineHeight: 1.4 }}>{t.time}</span>
-              <div className="flex items-center gap-1 shrink-0">
-                <span className="text-sm font-bold" style={{ color: "#21A85A", lineHeight: 1.4 }}>{formatCurrencyPlus(t.value)}</span>
-                <ChevronRight size={16} className="shrink-0" style={{ color: "#9a9a9a", display: "block", verticalAlign: "middle" }} />
+              <div className="shrink-0" style={{ whiteSpace: "nowrap" }}>
+                <span className="text-sm font-bold" style={{ color: "#21A85A", lineHeight: 1.4, verticalAlign: "middle" }}>{formatCurrencyPlus(t.value)}</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9a9a9a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: "inline-block", verticalAlign: "middle", marginLeft: 4 }}>
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
               </div>
             </div>
           </div>
