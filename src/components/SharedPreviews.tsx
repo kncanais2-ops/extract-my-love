@@ -200,7 +200,7 @@ export function PreviewPicPay({ transactions, dateLabel }: { transactions: Trans
               <span className="text-xs" style={{ color: "#9a9a9a", lineHeight: 1.4 }}>{t.time}</span>
               <div className="flex items-center gap-1 shrink-0">
                 <span className="text-sm font-bold" style={{ color: "#21A85A", lineHeight: 1.4 }}>{formatCurrencyPlus(t.value)}</span>
-                <ChevronRight size={16} className="shrink-0" style={{ color: "#9a9a9a" }} />
+                <ChevronRight size={16} className="shrink-0" style={{ color: "#9a9a9a", display: "block", verticalAlign: "middle" }} />
               </div>
             </div>
           </div>
