@@ -198,11 +198,9 @@ export function PreviewPicPay({ transactions, dateLabel }: { transactions: Trans
             </p>
             <div className="flex items-center justify-between mt-1">
               <span className="text-xs" style={{ color: "#9a9a9a", lineHeight: 1.4 }}>{t.time}</span>
-              <div className="shrink-0" style={{ position: "relative", paddingRight: 18, whiteSpace: "nowrap" }}>
+              <div className="shrink-0" style={{ whiteSpace: "nowrap" }}>
                 <span className="text-sm font-bold" style={{ color: "#21A85A", lineHeight: 1.4 }}>{formatCurrencyPlus(t.value)}</span>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9a9a9a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ position: "absolute", right: 0, top: "50%", marginTop: -7 }}>
-                  <polyline points="9 18 15 12 9 6" />
-                </svg>
+                <span style={{ color: "#9a9a9a", fontSize: 18, fontWeight: 400, marginLeft: 6, lineHeight: 1.4, fontFamily: "Arial, sans-serif" }}>›</span>
               </div>
             </div>
           </div>
