@@ -374,8 +374,9 @@ export function PreviewContaSimples({ transactions, dateLabel }: { transactions:
         )}
       </div>
 
-      {transactions.map((t) => (
-        <div key={t.id} className="flex items-start px-5 pt-3 pb-5">
+      {transactions.map((t, i) => (
+        <div key={t.id} className="flex items-start px-5 pt-3 pb-5"
+          style={{ borderBottom: i < transactions.length - 1 ? "1px solid #E5DDD0" : "none" }}>
           <img src="/conta-simples-icon.svg" alt="" className="shrink-0" style={{ width: 28, height: 28, marginTop: 2 }} />
           <div className="flex-1 ml-3 min-w-0">
             <div className="flex items-start justify-between gap-3">
