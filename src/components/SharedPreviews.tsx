@@ -364,7 +364,7 @@ function toShortDateBR(label: string): string {
 export function PreviewContaSimples({ transactions, dateLabel }: { transactions: Transaction[]; dateLabel: string }) {
   const shortDate = dateLabel ? toShortDateBR(dateLabel) : "";
   return (
-    <div style={{ backgroundColor: "#ffffff", fontFamily: "'Kommon Grotesk', Arial, Helvetica, sans-serif" }}>
+    <div style={{ backgroundColor: "#fefdf8", fontFamily: "'Kommon Grotesk', Arial, Helvetica, sans-serif" }}>
       {/* Section header: title + date */}
       <div className="flex items-center justify-between px-5 pt-5 pb-3"
         style={{ borderTop: "1px solid #E5DDD0" }}>

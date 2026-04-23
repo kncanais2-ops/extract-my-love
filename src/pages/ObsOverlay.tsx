@@ -56,7 +56,7 @@ export default function ObsOverlay() {
   };
 
   const isDarkBank = bank === "c6" || bank === "nubank";
-  const phoneBg = isDarkBank ? "#1a1a1a" : bank === "infinitepay" ? "#f2f2f2" : "#ffffff";
+  const phoneBg = isDarkBank ? "#1a1a1a" : bank === "infinitepay" ? "#f2f2f2" : bank === "contasimples" ? "#fefdf8" : "#ffffff";
 
   return (
     <div className="w-screen h-screen flex items-center justify-center p-4 bg-transparent overflow-hidden">
