@@ -325,7 +325,9 @@ export function PreviewSantander({ transactions, dateLabel }: { transactions: Tr
             <p className="flex-1 pr-3" style={{ fontSize: 16, color: "#1a1a1a", textTransform: "uppercase", lineHeight: 1.3 }}>
               {t.name || "Nome da pessoa"}
             </p>
-            <span style={{ fontSize: 16, fontWeight: 700, color: "#1a1a1a", whiteSpace: "nowrap" }}>{formatCurrency(t.value)}</span>
+            <span style={{ fontSize: 16, fontWeight: 700, color: "#1a1a1a", whiteSpace: "nowrap" }}>
+              <span style={{ fontFamily: "Arial, Helvetica, sans-serif" }}>R$</span>{formatCurrency(t.value).replace(/^R\$/, "")}
+            </span>
             <span style={{ color: "#EC0000", fontSize: 22, fontWeight: 400, marginLeft: 12, lineHeight: 1, fontFamily: "Arial, sans-serif", position: "relative", top: -1 }}>›</span>
           </div>
         </div>
