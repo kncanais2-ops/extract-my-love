@@ -158,11 +158,21 @@ const Login = () => {
         return;
       }
     } else {
-      void supabase.from("authorized_devices").insert({
+      const { error: insertError } = await supabase.from("authorized_devices").insert({
         user_id: user.id,
         fingerprint,
         device_label: navigator.userAgent.slice(0, 100),
       });
+      if (insertError) {
+        await supabase.auth.signOut();
+        toast({
+          title: "Não foi possível vincular este dispositivo",
+          description: "Tente novamente em instantes. Se persistir, contate o administrador.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
     }
 
     if (subscription) {
@@ -175,7 +185,7 @@ const Login = () => {
       }
     }
 
-    void supabase.auth.signOut({ scope: "others" as "global" });
+    await supabase.auth.signOut({ scope: "others" as "global" });
 
     void (async () => {
       try {
