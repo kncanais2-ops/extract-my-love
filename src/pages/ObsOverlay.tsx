@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   Transaction, BankType, PixData,
   PreviewInter, PreviewNeon, PreviewNubank, PreviewC6, PreviewPicPay,
-  PreviewMercadoPago, PreviewEfi, PreviewInfinitePay, PreviewPixComprovante
+  PreviewMercadoPago, PreviewEfi, PreviewInfinitePay, PreviewSantander, PreviewPixComprovante
 } from "@/components/SharedPreviews";
 
 export default function ObsOverlay() {
@@ -49,6 +49,7 @@ export default function ObsOverlay() {
       case "mercadopago": return <PreviewMercadoPago {...props} />;
       case "efi": return <PreviewEfi {...props} />;
       case "infinitepay": return <PreviewInfinitePay {...props} />;
+      case "santander": return <PreviewSantander {...props} />;
       default: return null;
     }
   };

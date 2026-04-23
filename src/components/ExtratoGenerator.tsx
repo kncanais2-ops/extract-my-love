@@ -27,7 +27,7 @@ import {
   Transaction, BankType, BANKS, CATEGORY_OPTIONS, 
   formatCurrencyInput, calcTotal, generatePixId, maskCPF, maskCNPJ, PixData,
   PreviewInter, PreviewNeon, PreviewNubank, PreviewC6, PreviewPicPay,
-  PreviewMercadoPago, PreviewEfi, PreviewInfinitePay, PreviewPixComprovante
+  PreviewMercadoPago, PreviewEfi, PreviewInfinitePay, PreviewSantander, PreviewPixComprovante
 } from "./SharedPreviews";
 
 /* ── Brasília time helpers ─────────────────────────────── */
@@ -510,6 +510,7 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
       case "mercadopago": return <PreviewMercadoPago {...props} />;
       case "efi": return <PreviewEfi {...props} />;
       case "infinitepay": return <PreviewInfinitePay {...props} />;
+      case "santander": return <PreviewSantander {...props} />;
     }
   };
 

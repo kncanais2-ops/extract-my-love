@@ -18,7 +18,7 @@ export interface Transaction {
   time: string;
 }
 
-export type BankType = "inter" | "neon" | "nubank" | "c6" | "picpay" | "mercadopago" | "efi" | "infinitepay" | "pix-comprovante";
+export type BankType = "inter" | "neon" | "nubank" | "c6" | "picpay" | "mercadopago" | "efi" | "infinitepay" | "santander" | "pix-comprovante";
 
 export const BANKS: { id: BankType; label: string; accent: string; ring: string }[] = [
   { id: "inter", label: "Banco Inter", accent: "#f57c00", ring: "ring-orange-500" },
@@ -29,6 +29,7 @@ export const BANKS: { id: BankType; label: string; accent: string; ring: string 
   { id: "mercadopago", label: "Mercado Pago", accent: "#009EE3", ring: "ring-blue-500" },
   { id: "efi", label: "Efí Bank", accent: "#F37021", ring: "ring-orange-400" },
   { id: "infinitepay", label: "InfinitePay", accent: "#00A868", ring: "ring-green-600" },
+  { id: "santander", label: "Santander", accent: "#EC0000", ring: "ring-red-600" },
   { id: "pix-comprovante", label: "Comprovante Pix", accent: "#32BCAD", ring: "ring-teal-500" },
 ];
 
@@ -301,6 +302,32 @@ export function PreviewInfinitePay({ transactions, dateLabel }: { transactions: 
               <p className="text-[15px] font-medium shrink-0 ml-2" style={{ color: "#1A7B36" }}>{formatCurrencyPlus(t.value)}</p>
             </div>
             <p className="text-[13.5px] mt-[1px]" style={{ color: "#666" }}>{t.time || "00:00"} • Recebido</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function PreviewSantander({ transactions, dateLabel }: { transactions: Transaction[]; dateLabel: string }) {
+  return (
+    <div style={{ backgroundColor: "#ffffff", fontFamily: "Arial, Helvetica, sans-serif" }}>
+      {dateLabel && (
+        <p className="px-5 pt-4 pb-2" style={{ fontSize: 13, fontWeight: 600, color: "#9a9a9a" }}>{dateLabel}</p>
+      )}
+      {transactions.map((t, i) => (
+        <div key={t.id} className="px-5 py-5"
+          style={{
+            borderTop: "1px solid #e0e0e0",
+            borderBottom: i === transactions.length - 1 ? "1px solid #e0e0e0" : "none",
+          }}>
+          <p style={{ fontSize: 17, color: "#3a3a3a", marginBottom: 18, fontWeight: 400 }}>Pix Recebido</p>
+          <div className="flex items-center">
+            <p className="flex-1 pr-3" style={{ fontSize: 16, color: "#1a1a1a", textTransform: "uppercase", lineHeight: 1.3 }}>
+              {t.name || "Nome da pessoa"}
+            </p>
+            <span style={{ fontSize: 16, fontWeight: 700, color: "#1a1a1a", whiteSpace: "nowrap" }}>{formatCurrency(t.value)}</span>
+            <span style={{ color: "#EC0000", fontSize: 22, fontWeight: 400, marginLeft: 12, lineHeight: 1, fontFamily: "Arial, sans-serif", position: "relative", top: -1 }}>›</span>
           </div>
         </div>
       ))}
