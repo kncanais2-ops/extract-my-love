@@ -365,29 +365,27 @@ export function PreviewContaSimples({ transactions, dateLabel }: { transactions:
   const shortDate = dateLabel ? toShortDateBR(dateLabel) : "";
   return (
     <div style={{ backgroundColor: "#fefdf8", fontFamily: "'Kommon Grotesk', Arial, Helvetica, sans-serif" }}>
-      {/* Section header: title + date */}
-      <div className="flex items-center justify-between px-5 pt-5 pb-3"
-        style={{ borderTop: "1px solid #E5DDD0" }}>
-        <p style={{ fontSize: 17, color: "#5b4337", fontWeight: 400 }}>Transferências PIX</p>
-        {shortDate && (
-          <p style={{ fontSize: 17, color: "#5b4337", fontWeight: 400 }}>{shortDate}</p>
-        )}
-      </div>
-
-      {transactions.map((t, i) => (
-        <div key={t.id} className="flex items-start px-5 pt-3 pb-5"
-          style={{ borderBottom: i < transactions.length - 1 ? "1px solid #E5DDD0" : "none" }}>
-          <img src="/conta-simples-icon.svg" alt="" className="shrink-0" style={{ width: 28, height: 28, marginTop: 2 }} />
-          <div className="flex-1 ml-3 min-w-0">
-            <div className="flex items-start justify-between gap-3">
-              <p className="flex-1" style={{ fontSize: 16, color: "#1a1a1a", textTransform: "uppercase", lineHeight: 1.3 }}>
-                {t.name || "Nome da pessoa"}
-              </p>
-              <span style={{ fontSize: 16, fontWeight: 700, color: "#1a1a1a", whiteSpace: "nowrap" }}>
-                <span style={{ fontFamily: "Arial, Helvetica, sans-serif" }}>-R$</span>{formatCurrency(t.value).replace(/^R\$/, "")}
-              </span>
+      {transactions.map((t) => (
+        <div key={t.id} style={{ borderTop: "1px solid #E5DDD0" }}>
+          <div className="flex items-center justify-between px-5 pt-5 pb-3">
+            <p style={{ fontSize: 17, color: "#5b4337", fontWeight: 400 }}>Transferências PIX</p>
+            {shortDate && (
+              <p style={{ fontSize: 17, color: "#5b4337", fontWeight: 400 }}>{shortDate}</p>
+            )}
+          </div>
+          <div className="flex items-start px-5 pt-3 pb-5">
+            <img src="/conta-simples-icon.svg" alt="" className="shrink-0" style={{ width: 28, height: 28, marginTop: 2 }} />
+            <div className="flex-1 ml-3 min-w-0">
+              <div className="flex items-start justify-between gap-3">
+                <p className="flex-1" style={{ fontSize: 16, color: "#1a1a1a", textTransform: "uppercase", lineHeight: 1.3 }}>
+                  {t.name || "Nome da pessoa"}
+                </p>
+                <span style={{ fontSize: 16, fontWeight: 700, color: "#1a1a1a", whiteSpace: "nowrap" }}>
+                  <span style={{ fontFamily: "Arial, Helvetica, sans-serif" }}>-R$</span>{formatCurrency(t.value).replace(/^R\$/, "")}
+                </span>
+              </div>
+              <img src="/conta-simples-file.svg" alt="" style={{ width: 16, height: 16, marginTop: 8 }} />
             </div>
-            <img src="/conta-simples-file.svg" alt="" style={{ width: 16, height: 16, marginTop: 8 }} />
           </div>
         </div>
       ))}
