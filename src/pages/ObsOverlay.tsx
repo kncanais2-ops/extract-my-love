@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   Transaction, BankType, PixData,
   PreviewInter, PreviewNeon, PreviewNubank, PreviewC6, PreviewPicPay,
-  PreviewMercadoPago, PreviewEfi, PreviewInfinitePay, PreviewSantander, PreviewPixComprovante
+  PreviewMercadoPago, PreviewEfi, PreviewInfinitePay, PreviewSantander, PreviewContaSimples, PreviewPixComprovante
 } from "@/components/SharedPreviews";
 
 export default function ObsOverlay() {
@@ -50,12 +50,13 @@ export default function ObsOverlay() {
       case "efi": return <PreviewEfi {...props} />;
       case "infinitepay": return <PreviewInfinitePay {...props} />;
       case "santander": return <PreviewSantander {...props} />;
+      case "contasimples": return <PreviewContaSimples {...props} />;
       default: return null;
     }
   };
 
   const isDarkBank = bank === "c6" || bank === "nubank";
-  const phoneBg = isDarkBank ? "#1a1a1a" : bank === "infinitepay" ? "#f2f2f2" : "#ffffff";
+  const phoneBg = isDarkBank ? "#1a1a1a" : bank === "infinitepay" ? "#f2f2f2" : bank === "contasimples" ? "#FBF6EC" : "#ffffff";
 
   return (
     <div className="w-screen h-screen flex items-center justify-center p-4 bg-transparent overflow-hidden">

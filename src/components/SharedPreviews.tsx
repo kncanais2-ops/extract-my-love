@@ -18,7 +18,7 @@ export interface Transaction {
   time: string;
 }
 
-export type BankType = "inter" | "neon" | "nubank" | "c6" | "picpay" | "mercadopago" | "efi" | "infinitepay" | "santander" | "pix-comprovante";
+export type BankType = "inter" | "neon" | "nubank" | "c6" | "picpay" | "mercadopago" | "efi" | "infinitepay" | "santander" | "contasimples" | "pix-comprovante";
 
 export const BANKS: { id: BankType; label: string; accent: string; ring: string }[] = [
   { id: "inter", label: "Banco Inter", accent: "#f57c00", ring: "ring-orange-500" },
@@ -30,6 +30,7 @@ export const BANKS: { id: BankType; label: string; accent: string; ring: string 
   { id: "efi", label: "Efí Bank", accent: "#F37021", ring: "ring-orange-400" },
   { id: "infinitepay", label: "InfinitePay", accent: "#00A868", ring: "ring-green-600" },
   { id: "santander", label: "Santander", accent: "#EC0000", ring: "ring-red-600" },
+  { id: "contasimples", label: "Conta Simples", accent: "#5b4337", ring: "ring-amber-900" },
   { id: "pix-comprovante", label: "Comprovante Pix", accent: "#32BCAD", ring: "ring-teal-500" },
 ];
 
@@ -329,6 +330,38 @@ export function PreviewSantander({ transactions, dateLabel }: { transactions: Tr
               <span style={{ fontFamily: "Arial, Helvetica, sans-serif" }}>R$</span>{formatCurrency(t.value).replace(/^R\$/, "")}
             </span>
             <span style={{ color: "#EC0000", fontSize: 22, fontWeight: 400, marginLeft: 12, lineHeight: 1, fontFamily: "Arial, sans-serif", position: "relative", top: -1 }}>›</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function PreviewContaSimples({ transactions, dateLabel }: { transactions: Transaction[]; dateLabel: string }) {
+  return (
+    <div style={{ backgroundColor: "#FBF6EC", fontFamily: "'Kommon Grotesk', Arial, Helvetica, sans-serif" }}>
+      {/* Section header: title + date */}
+      <div className="flex items-center justify-between px-5 pt-5 pb-3"
+        style={{ borderTop: "1px solid #E5DDD0" }}>
+        <p style={{ fontSize: 17, color: "#5b4337", fontWeight: 400 }}>Transferências PIX</p>
+        {dateLabel && (
+          <p style={{ fontSize: 17, color: "#5b4337", fontWeight: 400 }}>{dateLabel}</p>
+        )}
+      </div>
+
+      {transactions.map((t) => (
+        <div key={t.id} className="flex items-start px-5 pt-3 pb-5">
+          <img src="/conta-simples-icon.svg" alt="" className="shrink-0" style={{ width: 28, height: 28, marginTop: 2 }} />
+          <div className="flex-1 ml-3 min-w-0">
+            <div className="flex items-start justify-between gap-3">
+              <p className="flex-1" style={{ fontSize: 16, color: "#1a1a1a", textTransform: "uppercase", lineHeight: 1.3 }}>
+                {t.name || "Nome da pessoa"}
+              </p>
+              <span style={{ fontSize: 16, fontWeight: 700, color: "#1a1a1a", whiteSpace: "nowrap" }}>
+                -<span style={{ fontFamily: "Arial, Helvetica, sans-serif" }}>R$</span>{formatCurrency(t.value).replace(/^R\$/, "")}
+              </span>
+            </div>
+            <img src="/conta-simples-file.svg" alt="" style={{ width: 16, height: 16, marginTop: 8 }} />
           </div>
         </div>
       ))}

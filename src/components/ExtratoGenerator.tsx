@@ -27,7 +27,7 @@ import {
   Transaction, BankType, BANKS, CATEGORY_OPTIONS, 
   formatCurrencyInput, calcTotal, generatePixId, maskCPF, maskCNPJ, PixData,
   PreviewInter, PreviewNeon, PreviewNubank, PreviewC6, PreviewPicPay,
-  PreviewMercadoPago, PreviewEfi, PreviewInfinitePay, PreviewSantander, PreviewPixComprovante
+  PreviewMercadoPago, PreviewEfi, PreviewInfinitePay, PreviewSantander, PreviewContaSimples, PreviewPixComprovante
 } from "./SharedPreviews";
 
 /* ── Brasília time helpers ─────────────────────────────── */
@@ -465,7 +465,7 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
     setExporting(true);
     try {
       const canvas = await html2canvas(extratoRef.current, {
-        backgroundColor: isDarkBank ? "#1a1a1a" : "#ffffff",
+        backgroundColor: phoneBg,
         scale: 2,
       });
       const link = document.createElement("a");
@@ -482,7 +482,7 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
     if (hasDuplicateNames) { warnDuplicate(); return; }
     try {
       const canvas = await html2canvas(extratoRef.current, {
-        backgroundColor: isDarkBank ? "#1a1a1a" : "#ffffff",
+        backgroundColor: phoneBg,
         scale: 2,
       });
       canvas.toBlob(async (blob) => {
@@ -511,11 +511,12 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
       case "efi": return <PreviewEfi {...props} />;
       case "infinitepay": return <PreviewInfinitePay {...props} />;
       case "santander": return <PreviewSantander {...props} />;
+      case "contasimples": return <PreviewContaSimples {...props} />;
     }
   };
 
   const isDarkBank = bank === "c6" || bank === "nubank";
-  const phoneBg = isDarkBank ? "#1a1a1a" : bank === "infinitepay" ? "#f2f2f2" : "#ffffff";
+  const phoneBg = isDarkBank ? "#1a1a1a" : bank === "infinitepay" ? "#f2f2f2" : bank === "contasimples" ? "#FBF6EC" : "#ffffff";
   const currentBank = BANKS.find((b) => b.id === bank);
 
   return (
