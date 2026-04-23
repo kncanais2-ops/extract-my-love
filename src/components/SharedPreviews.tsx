@@ -313,14 +313,14 @@ export function PreviewSantander({ transactions, dateLabel }: { transactions: Tr
   return (
     <div style={{ backgroundColor: "#ffffff", fontFamily: "Arial, Helvetica, sans-serif" }}>
       {dateLabel && (
-        <p className="px-5 pt-4 pb-2" style={{ fontSize: 13, fontWeight: 600, color: "#9a9a9a" }}>{dateLabel}</p>
+        <p className="px-5 pt-4 pb-2" style={{ fontSize: 13, fontWeight: 600, color: "#5a5a5a" }}>{dateLabel}</p>
       )}
       {transactions.map((t, i) => (
         <div key={t.id} className="px-5 py-5"
           style={{
             borderBottom: i < transactions.length - 1 ? "1px solid #e0e0e0" : "none",
           }}>
-          <p style={{ fontSize: 17, color: "#3a3a3a", marginBottom: 18, fontWeight: 400 }}>Pix Recebido</p>
+          <p style={{ fontSize: 17, color: "#1f1f1f", marginBottom: 18, fontWeight: 400 }}>Pix Recebido</p>
           <div className="flex items-center">
             <p className="flex-1 pr-3" style={{ fontSize: 16, color: "#1a1a1a", textTransform: "uppercase", lineHeight: 1.3 }}>
               {t.name || "Nome da pessoa"}
