@@ -147,9 +147,6 @@ const Login = () => {
       supabase.from("user_subscriptions").select("expires_at").eq("user_id", user.id).maybeSingle(),
     ]);
 
-    console.log("[login] deviceRes:", deviceRes);
-    console.log("[login] fingerprint:", fingerprint);
-
     const device = deviceRes.data;
     const subscription = subRes.data;
 
@@ -162,7 +159,6 @@ const Login = () => {
       }
     } else {
       const { data: sessionData } = await supabase.auth.getSession();
-      console.log("[login] session before insert:", sessionData.session?.user?.id);
       const { data: insertData, error: insertError } = await supabase
         .from("authorized_devices")
         .insert({
@@ -171,7 +167,18 @@ const Login = () => {
           device_label: navigator.userAgent.slice(0, 100),
         })
         .select();
-      console.log("[login] insert result:", { insertData, insertError });
+
+      const debugInfo = {
+        fp: fingerprint?.slice(0, 10),
+        user_id: user.id?.slice(0, 8),
+        session_user: sessionData.session?.user?.id?.slice(0, 8),
+        deviceRes_error: deviceRes.error?.message ?? null,
+        deviceRes_data: deviceRes.data,
+        insert_error: insertError?.message ?? null,
+        insert_data: insertData,
+      };
+      window.alert("DEBUG LOGIN:\n" + JSON.stringify(debugInfo, null, 2));
+
       if (insertError) {
         await supabase.auth.signOut();
         toast({
