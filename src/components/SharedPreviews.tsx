@@ -339,7 +339,7 @@ export function PreviewSantander({ transactions, dateLabel }: { transactions: Tr
 
 export function PreviewContaSimples({ transactions, dateLabel }: { transactions: Transaction[]; dateLabel: string }) {
   return (
-    <div style={{ backgroundColor: "#FBF6EC", fontFamily: "'Kommon Grotesk', Arial, Helvetica, sans-serif" }}>
+    <div style={{ backgroundColor: "#ffffff", fontFamily: "'Kommon Grotesk', Arial, Helvetica, sans-serif" }}>
       {/* Section header: title + date */}
       <div className="flex items-center justify-between px-5 pt-5 pb-3"
         style={{ borderTop: "1px solid #E5DDD0" }}>
