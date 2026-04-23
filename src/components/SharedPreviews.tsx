@@ -311,7 +311,7 @@ export function PreviewInfinitePay({ transactions, dateLabel }: { transactions: 
 
 export function PreviewSantander({ transactions, dateLabel }: { transactions: Transaction[]; dateLabel: string }) {
   return (
-    <div style={{ backgroundColor: "#ffffff", fontFamily: "Arial, Helvetica, sans-serif" }}>
+    <div style={{ backgroundColor: "#ffffff", fontFamily: "'LFT Etica', Arial, Helvetica, sans-serif" }}>
       {dateLabel && (
         <p className="px-5 pt-4 pb-2" style={{ fontSize: 13, fontWeight: 600, color: "#5a5a5a" }}>{dateLabel}</p>
       )}
