@@ -318,8 +318,7 @@ export function PreviewSantander({ transactions, dateLabel }: { transactions: Tr
       {transactions.map((t, i) => (
         <div key={t.id} className="px-5 py-5"
           style={{
-            borderTop: "1px solid #e0e0e0",
-            borderBottom: i === transactions.length - 1 ? "1px solid #e0e0e0" : "none",
+            borderBottom: i < transactions.length - 1 ? "1px solid #e0e0e0" : "none",
           }}>
           <p style={{ fontSize: 17, color: "#3a3a3a", marginBottom: 18, fontWeight: 400 }}>Pix Recebido</p>
           <div className="flex items-center">
