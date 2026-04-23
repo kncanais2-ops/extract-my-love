@@ -384,7 +384,7 @@ export function PreviewContaSimples({ transactions, dateLabel }: { transactions:
                 {t.name || "Nome da pessoa"}
               </p>
               <span style={{ fontSize: 16, fontWeight: 700, color: "#1a1a1a", whiteSpace: "nowrap" }}>
-                -<span style={{ fontFamily: "Arial, Helvetica, sans-serif" }}>R$</span>{formatCurrency(t.value).replace(/^R\$/, "")}
+                <span style={{ fontFamily: "Arial, Helvetica, sans-serif" }}>-R$</span>{formatCurrency(t.value).replace(/^R\$/, "")}
               </span>
             </div>
             <img src="/conta-simples-file.svg" alt="" style={{ width: 16, height: 16, marginTop: 8 }} />
