@@ -337,15 +337,40 @@ export function PreviewSantander({ transactions, dateLabel }: { transactions: Tr
   );
 }
 
+function toShortDateBR(label: string): string {
+  const meses: Record<string, string> = {
+    janeiro: "01", fevereiro: "02", março: "03", marco: "03", abril: "04",
+    maio: "05", junho: "06", julho: "07", agosto: "08", setembro: "09",
+    outubro: "10", novembro: "11", dezembro: "12",
+  };
+  const pad = (n: number | string) => String(n).padStart(2, "0");
+  const ddmm = label.match(/(\d{1,2})\/(\d{1,2})/);
+  if (ddmm) return `${pad(ddmm[1])}/${pad(ddmm[2])}`;
+  const longMatch = label.toLowerCase().match(/(\d{1,2})\s+de\s+([a-zçãé]+)/);
+  if (longMatch && meses[longMatch[2]]) return `${pad(longMatch[1])}/${meses[longMatch[2]]}`;
+  const lower = label.toLowerCase();
+  if (lower.includes("hoje")) {
+    const d = new Date();
+    return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}`;
+  }
+  if (lower.includes("ontem")) {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}`;
+  }
+  return label;
+}
+
 export function PreviewContaSimples({ transactions, dateLabel }: { transactions: Transaction[]; dateLabel: string }) {
+  const shortDate = dateLabel ? toShortDateBR(dateLabel) : "";
   return (
     <div style={{ backgroundColor: "#ffffff", fontFamily: "'Kommon Grotesk', Arial, Helvetica, sans-serif" }}>
       {/* Section header: title + date */}
       <div className="flex items-center justify-between px-5 pt-5 pb-3"
         style={{ borderTop: "1px solid #E5DDD0" }}>
         <p style={{ fontSize: 17, color: "#5b4337", fontWeight: 400 }}>Transferências PIX</p>
-        {dateLabel && (
-          <p style={{ fontSize: 17, color: "#5b4337", fontWeight: 400 }}>{dateLabel}</p>
+        {shortDate && (
+          <p style={{ fontSize: 17, color: "#5b4337", fontWeight: 400 }}>{shortDate}</p>
         )}
       </div>
 
