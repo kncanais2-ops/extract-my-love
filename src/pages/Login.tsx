@@ -143,9 +143,12 @@ const Login = () => {
 
     const [fingerprint, deviceRes, subRes] = await Promise.all([
       fingerprintPromise,
-      supabase.from("authorized_devices").select("fingerprint").eq("user_id", user.id).single(),
-      supabase.from("user_subscriptions").select("expires_at").eq("user_id", user.id).single(),
+      supabase.from("authorized_devices").select("fingerprint").eq("user_id", user.id).maybeSingle(),
+      supabase.from("user_subscriptions").select("expires_at").eq("user_id", user.id).maybeSingle(),
     ]);
+
+    console.log("[login] deviceRes:", deviceRes);
+    console.log("[login] fingerprint:", fingerprint);
 
     const device = deviceRes.data;
     const subscription = subRes.data;
@@ -158,16 +161,22 @@ const Login = () => {
         return;
       }
     } else {
-      const { error: insertError } = await supabase.from("authorized_devices").insert({
-        user_id: user.id,
-        fingerprint,
-        device_label: navigator.userAgent.slice(0, 100),
-      });
+      const { data: sessionData } = await supabase.auth.getSession();
+      console.log("[login] session before insert:", sessionData.session?.user?.id);
+      const { data: insertData, error: insertError } = await supabase
+        .from("authorized_devices")
+        .insert({
+          user_id: user.id,
+          fingerprint,
+          device_label: navigator.userAgent.slice(0, 100),
+        })
+        .select();
+      console.log("[login] insert result:", { insertData, insertError });
       if (insertError) {
         await supabase.auth.signOut();
         toast({
           title: "Não foi possível vincular este dispositivo",
-          description: "Tente novamente em instantes. Se persistir, contate o administrador.",
+          description: insertError.message || "Tente novamente em instantes.",
           variant: "destructive",
         });
         setLoading(false);
