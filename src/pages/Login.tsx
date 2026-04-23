@@ -158,27 +158,11 @@ const Login = () => {
         return;
       }
     } else {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const { data: insertData, error: insertError } = await supabase
-        .from("authorized_devices")
-        .insert({
-          user_id: user.id,
-          fingerprint,
-          device_label: navigator.userAgent.slice(0, 100),
-        })
-        .select();
-
-      const debugInfo = {
-        fp: fingerprint?.slice(0, 10),
-        user_id: user.id?.slice(0, 8),
-        session_user: sessionData.session?.user?.id?.slice(0, 8),
-        deviceRes_error: deviceRes.error?.message ?? null,
-        deviceRes_data: deviceRes.data,
-        insert_error: insertError?.message ?? null,
-        insert_data: insertData,
-      };
-      window.alert("DEBUG LOGIN:\n" + JSON.stringify(debugInfo, null, 2));
-
+      const { error: insertError } = await supabase.from("authorized_devices").insert({
+        user_id: user.id,
+        fingerprint,
+        device_label: navigator.userAgent.slice(0, 100),
+      });
       if (insertError) {
         await supabase.auth.signOut();
         toast({
