@@ -2,7 +2,20 @@
   "permissions": {
     "allow": [
       "Bash(npx tsc:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(npm run *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(cp \"/c/Windows/Fonts/fonnts.com-LFT_Etica_Regular.otf\" public/fonts/LFTEtica-Regular.otf)",
+      "Bash(cp \"/c/Windows/Fonts/fonnts.com-LFT_Etica_SB.otf\" public/fonts/LFTEtica-SemiBold.otf)",
+      "Bash(unzip -l \"/c/Users/Administrator/Downloads/kommon-grotesk-regular_freefontdownload_org.zip\")",
+      "Read(//c/Windows/Fonts//**)",
+      "Bash(mkdir -p Instaladores Imagens/Extratos Imagens/Outras Fontes Documentos Icones-SVG Projetos)",
+      "Bash(ls -d */)",
+      "Bash(mv -v *.svg *.ico Icones-SVG/)",
+      "Bash(mv -v *.pdf *.sql *.cfg Documentos/)",
+      "Bash(npm uninstall *)"
     ]
   }
 }

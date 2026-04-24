@@ -523,7 +523,7 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
   const currentBank = BANKS.find((b) => b.id === bank);
 
   return (
-    <div className="flex items-start justify-center px-4 py-6 gap-6 flex-wrap lg:flex-nowrap max-w-6xl mx-auto">
+    <div className="bg-background flex items-start justify-center px-4 py-6 gap-6 flex-wrap lg:flex-nowrap max-w-6xl mx-auto">
       <SuccessOverlay visible={showSuccess} onDone={() => setShowSuccess(false)} />
       {/* Form */}
       <div className="w-full max-w-lg">

@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Shield, LogOut, Sun, Moon, Receipt, Clock } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import VantaBackground from "@/components/VantaBackground";
 
 const Index = () => {
   const { session } = useAuth();
@@ -75,8 +74,49 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">
-      {/* Background — Vanta Halo (Three.js) */}
-      <VantaBackground />
+      {/* Background effects */}
+      <div className="fixed inset-0 bg-background -z-10" />
+      <div className="fixed inset-0 -z-10 overflow-hidden">
+        {/* Gradient blobs */}
+        <div
+          className="absolute rounded-full blur-[120px] opacity-20 dark:opacity-15"
+          style={{
+            width: 500,
+            height: 500,
+            background: "radial-gradient(circle, #22c55e, transparent 70%)",
+            top: -100,
+            left: -100,
+          }}
+        />
+        <div
+          className="absolute rounded-full blur-[120px] opacity-15 dark:opacity-10"
+          style={{
+            width: 400,
+            height: 400,
+            background: "radial-gradient(circle, #3b82f6, transparent 70%)",
+            top: "40%",
+            right: -150,
+          }}
+        />
+        <div
+          className="absolute rounded-full blur-[100px] opacity-10 dark:opacity-[0.07]"
+          style={{
+            width: 350,
+            height: 350,
+            background: "radial-gradient(circle, #8b5cf6, transparent 70%)",
+            bottom: -50,
+            left: "30%",
+          }}
+        />
+        {/* Dot grid pattern */}
+        <div
+          className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]"
+          style={{
+            backgroundImage: "radial-gradient(circle, currentColor 1px, transparent 1px)",
+            backgroundSize: "24px 24px",
+          }}
+        />
+      </div>
 
       {/* Header */}
       <header className="border-b bg-card/60 backdrop-blur-md sticky top-0 z-50">
