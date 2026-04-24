@@ -380,21 +380,20 @@ export function PreviewContaSimples({ transactions, dateLabel }: { transactions:
           {/* Row 1: header */}
           <div />
           <p style={{ fontSize: 17, color: "#5b4337", fontWeight: 400, margin: 0 }}>Transferências PIX</p>
-          <p style={{ fontSize: 17, color: "#5b4337", fontWeight: 400, margin: 0 }}>{shortDate}</p>
+          <p style={{ fontSize: 17, color: "#5b4337", fontWeight: 400, margin: 0, justifySelf: "end" }}>{shortDate}</p>
 
           {/* Row 2: icon + name + value */}
           <img src="/conta-simples-icon.svg" alt="" style={{ width: 18, height: 18 }} />
           <p style={{ fontSize: 16, color: "#1a1a1a", textTransform: "uppercase", lineHeight: 1.3, margin: 0 }}>
             {t.name || "Nome da pessoa"}
           </p>
-          <span style={{ fontSize: 16, fontWeight: 700, color: "#1a1a1a", whiteSpace: "nowrap", display: "inline-flex", alignItems: "baseline" }}>
-            <span style={{ fontFamily: "Arial, Helvetica, sans-serif", display: "inline-block" }}>-R$</span>
-            <span style={{ display: "inline-block" }}>{formatCurrency(t.value).replace(/^R\$/, "")}</span>
+          <span style={{ fontSize: 16, fontWeight: 700, color: "#1a1a1a", whiteSpace: "nowrap", justifySelf: "end" }}>
+            -{formatCurrency(t.value)}
           </span>
 
           {/* Row 3: file icon */}
           <div />
-          <img src="/conta-simples-file.svg" alt="" style={{ width: 14, height: 14 }} />
+          <img src="/conta-simples-file.svg" alt="" style={{ width: 14, height: 14, marginTop: 8 }} />
           <div />
         </div>
       ))}
