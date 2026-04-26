@@ -630,7 +630,13 @@ const WHATSAPP_BG_COLOR = "#EFE7DD";
 
 export function PreviewWhatsApp({ data }: { data: WhatsAppData }) {
   return (
-    <div style={{ backgroundColor: WHATSAPP_BG_COLOR, fontFamily: "-apple-system, 'SF Pro Text', system-ui, sans-serif" }}>
+    <div style={{
+      backgroundColor: WHATSAPP_BG_COLOR,
+      backgroundImage: "url(/whatsapp-bg.jpg)",
+      backgroundRepeat: "repeat",
+      backgroundSize: "auto",
+      fontFamily: "-apple-system, 'SF Pro Text', system-ui, sans-serif",
+    }}>
       {/* Header */}
       <div style={{ background: "#f7f4ef", padding: "10px 14px 12px 14px", borderBottom: "1px solid #d9d4cc" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
