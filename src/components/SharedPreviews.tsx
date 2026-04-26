@@ -430,6 +430,37 @@ export interface WhatsAppData {
   avatar: string;
   unreadCount: string;
   messages: WhatsAppMessage[];
+  receiptPosition: "before" | "after";
+  receiptFilename: string;
+  receiptCaption: string;
+  receiptTime: string;
+  receiptReadStatus: WhatsAppReadStatus;
+}
+
+export function generateReceiptFilename(): string {
+  const hex = (n: number) =>
+    Array.from({ length: n }, () => Math.floor(Math.random() * 16).toString(16).toUpperCase()).join("");
+  return `${hex(8)}-${hex(4)}-${hex(4)}-${hex(4)}-${hex(12)}.pdf`;
+}
+
+export function generateReceiptCaption(date: Date = new Date()): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `_${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}${pad(date.getHours())}${pad(date.getMinutes())}${pad(date.getSeconds())}`;
+}
+
+function buildReceiptMessage(data: WhatsAppData): WhatsAppMessage {
+  return {
+    id: "__receipt__",
+    type: "pdf",
+    side: "right",
+    time: data.receiptTime,
+    readStatus: data.receiptReadStatus,
+    pdfTitle: "Comprovante de Pix",
+    pdfFilename: data.receiptFilename,
+    pdfSize: "21 KB",
+    pdfPages: "1",
+    pdfCaption: data.receiptCaption,
+  };
 }
 
 function WhatsAppReadMarks({ status }: { status: WhatsAppReadStatus }) {
@@ -607,17 +638,23 @@ export function PreviewWhatsApp({ data }: { data: WhatsAppData }) {
         </div>
       </div>
 
-      {/* Messages */}
+      {/* Messages — receipt is fixed and injected at chosen position */}
       <div style={{ padding: "10px 0 12px 0", display: "flex", flexDirection: "column", gap: 4 }}>
-        {data.messages.map((msg, i) => {
-          const prev = data.messages[i - 1];
-          const isFirst = !prev || prev.side !== msg.side;
-          return (
-            <div key={msg.id} style={{ marginTop: isFirst && i > 0 ? 6 : 0 }}>
-              <WhatsAppBubble msg={msg} isFirst={isFirst} />
-            </div>
-          );
-        })}
+        {(() => {
+          const receipt = buildReceiptMessage(data);
+          const all = data.receiptPosition === "before"
+            ? [receipt, ...data.messages]
+            : [...data.messages, receipt];
+          return all.map((msg, i) => {
+            const prev = all[i - 1];
+            const isFirst = !prev || prev.side !== msg.side;
+            return (
+              <div key={msg.id} style={{ marginTop: isFirst && i > 0 ? 6 : 0 }}>
+                <WhatsAppBubble msg={msg} isFirst={isFirst} />
+              </div>
+            );
+          });
+        })()}
       </div>
 
       {/* Composer */}

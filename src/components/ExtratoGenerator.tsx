@@ -28,7 +28,8 @@ import {
   formatCurrencyInput, calcTotal, generatePixId, maskCPF, maskCNPJ, PixData,
   PreviewInter, PreviewNeon, PreviewNubank, PreviewC6, PreviewPicPay,
   PreviewMercadoPago, PreviewEfi, PreviewInfinitePay, PreviewSantander, PreviewContaSimples, PreviewPixComprovante,
-  PreviewWhatsApp, WhatsAppData, WhatsAppMessage, WhatsAppMessageType, WhatsAppReadStatus
+  PreviewWhatsApp, WhatsAppData, WhatsAppMessage, WhatsAppMessageType, WhatsAppReadStatus,
+  generateReceiptFilename, generateReceiptCaption
 } from "./SharedPreviews";
 
 /* ── Brasília time helpers ─────────────────────────────── */
@@ -248,18 +249,33 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
     setPixData((prev) => ({ ...prev, [field]: sanitized }));
   };
 
-  // WhatsApp state
+  // WhatsApp state — receipt is fixed/auto-generated; user only chooses position
   const [whatsappData, setWhatsappData] = useState<WhatsAppData>({
     contactName: "Jota",
     avatar: "",
     unreadCount: "",
-    messages: [
-      { id: "1", type: "text", side: "left", time: getBrasiliaTime(), readStatus: "none", text: "Vou no banheiro" },
-    ],
+    messages: [],
+    receiptPosition: "after",
+    receiptFilename: generateReceiptFilename(),
+    receiptCaption: generateReceiptCaption(),
+    receiptTime: getBrasiliaTime(),
+    receiptReadStatus: "read",
   });
 
   const updateWhatsappField = (field: "contactName" | "avatar" | "unreadCount", val: string) => {
     setWhatsappData((prev) => ({ ...prev, [field]: val }));
+  };
+
+  const updateReceiptField = (field: "receiptPosition" | "receiptTime" | "receiptReadStatus", val: string) => {
+    setWhatsappData((prev) => ({ ...prev, [field]: val } as WhatsAppData));
+  };
+
+  const regenerateReceipt = () => {
+    setWhatsappData((prev) => ({
+      ...prev,
+      receiptFilename: generateReceiptFilename(),
+      receiptCaption: generateReceiptCaption(),
+    }));
   };
 
   const addWhatsappMessage = (type: WhatsAppMessageType = "text") => {
@@ -276,11 +292,6 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
           text: type === "text" ? "" : undefined,
           duration: type === "voice-call" ? "1 minuto" : undefined,
           images: type === "image" ? [] : undefined,
-          pdfTitle: type === "pdf" ? "Comprovante de Pix" : undefined,
-          pdfFilename: type === "pdf" ? "comprovante.pdf" : undefined,
-          pdfSize: type === "pdf" ? "21 KB" : undefined,
-          pdfPages: type === "pdf" ? "1" : undefined,
-          pdfCaption: type === "pdf" ? "" : undefined,
         },
       ],
     }));
@@ -849,6 +860,61 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
                   </div>
                 </div>
 
+                {/* Comprovante fixo */}
+                <div className="bg-card/50 backdrop-blur-sm rounded-xl p-4 border border-border/50 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-muted-foreground">Comprovante CAIXA (fixo)</span>
+                    <button
+                      onClick={regenerateReceipt}
+                      className="text-xs text-muted-foreground hover:text-foreground px-2 py-1 rounded-md hover:bg-muted transition-colors flex items-center gap-1"
+                      title="Gerar novo nome de arquivo + número da legenda"
+                    >
+                      <RotateCcw size={12} /> Gerar novo
+                    </button>
+                  </div>
+                  <div className="text-[11px] text-muted-foreground bg-background border border-border rounded-md px-2 py-1.5 font-mono break-all">
+                    {whatsappData.receiptFilename}
+                  </div>
+                  <div className="text-[11px] text-muted-foreground bg-background border border-border rounded-md px-2 py-1.5 font-mono">
+                    {whatsappData.receiptCaption}
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <select
+                      value={whatsappData.receiptPosition}
+                      onChange={(e) => updateReceiptField("receiptPosition", e.target.value)}
+                      className="bg-background border border-border rounded-lg px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                    >
+                      <option value="after">Depois das mensagens</option>
+                      <option value="before">Antes das mensagens</option>
+                    </select>
+                    <select
+                      value={whatsappData.receiptReadStatus}
+                      onChange={(e) => updateReceiptField("receiptReadStatus", e.target.value)}
+                      className="bg-background border border-border rounded-lg px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                    >
+                      <option value="none">Sem ✓</option>
+                      <option value="sent">✓ Enviado</option>
+                      <option value="delivered">✓✓ Entregue</option>
+                      <option value="read">✓✓ Lida (azul)</option>
+                    </select>
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      type="text" placeholder="Hora (07:21)"
+                      value={whatsappData.receiptTime}
+                      onChange={(e) => updateReceiptField("receiptTime", maskTime(e.target.value))}
+                      className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                    />
+                    <button
+                      onClick={() => updateReceiptField("receiptTime", getBrasiliaTime())}
+                      className="shrink-0 bg-background border border-border rounded-lg px-3 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                      title="Atualizar para horário de Brasília"
+                    >
+                      <RotateCcw size={14} />
+                    </button>
+                  </div>
+                </div>
+
                 {whatsappData.messages.map((m, idx) => (
                   <div key={m.id} className="bg-card/50 backdrop-blur-sm rounded-xl p-3 border border-border/50 space-y-2">
                     <div className="flex items-center justify-between">
@@ -872,7 +938,6 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
                         <option value="voice-call">Ligação de voz</option>
                         <option value="missed-call">Ligação perdida</option>
                         <option value="image">Imagem(s)</option>
-                        <option value="pdf">PDF (comprovante)</option>
                       </select>
                       <select
                         value={m.side}
@@ -921,43 +986,6 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
                             ))}
                           </div>
                         )}
-                      </div>
-                    )}
-
-                    {m.type === "pdf" && (
-                      <div className="space-y-2">
-                        <input
-                          type="text" placeholder="Título do banco (ex: Comprovante de Pix)"
-                          value={m.pdfTitle || ""}
-                          onChange={(e) => updateWhatsappMessage(m.id, { pdfTitle: e.target.value })}
-                          className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                        />
-                        <input
-                          type="text" placeholder="Nome do arquivo (.pdf)"
-                          value={m.pdfFilename || ""}
-                          onChange={(e) => updateWhatsappMessage(m.id, { pdfFilename: e.target.value })}
-                          className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                        />
-                        <div className="flex gap-2">
-                          <input
-                            type="text" placeholder="Páginas"
-                            value={m.pdfPages || ""}
-                            onChange={(e) => updateWhatsappMessage(m.id, { pdfPages: e.target.value.replace(/\D/g, "").slice(0, 4) })}
-                            className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                          />
-                          <input
-                            type="text" placeholder="Tamanho (ex: 21 KB)"
-                            value={m.pdfSize || ""}
-                            onChange={(e) => updateWhatsappMessage(m.id, { pdfSize: e.target.value })}
-                            className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                          />
-                        </div>
-                        <input
-                          type="text" placeholder="Legenda (opcional)"
-                          value={m.pdfCaption || ""}
-                          onChange={(e) => updateWhatsappMessage(m.id, { pdfCaption: e.target.value })}
-                          className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                        />
                       </div>
                     )}
 
