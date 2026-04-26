@@ -536,11 +536,30 @@ function WhatsAppBubble({ msg, isFirst }: { msg: WhatsAppMessage; isFirst: boole
         )}
 
         {msg.type === "pdf" && (
-          <div style={{ minWidth: 250 }}>
+          <div style={{ width: 280 }}>
             {msg.pdfTitle && (
-              <div style={{ background: "#0c4a91", color: "#fff", padding: "12px 14px", borderRadius: "8px 8px 0 0", margin: "-6px -9px 0 -10px" }}>
-                <p style={{ fontSize: 16, fontWeight: 700, margin: 0, letterSpacing: 0.5 }}>CAIXA</p>
-                <p style={{ fontSize: 15, fontWeight: 600, margin: 0, marginTop: 4 }}>{msg.pdfTitle}</p>
+              <div
+                style={{
+                  margin: "-6px -9px 0 -10px",
+                  background: "url(/caixa-receipt-bg.svg) no-repeat",
+                  backgroundSize: "100% 100%",
+                  padding: "16px 18px 30px 18px",
+                  color: "#fff",
+                }}
+              >
+                <img src="/caixa-logo.png" alt="CAIXA" style={{ height: 22, width: "auto", display: "block" }} />
+                <p
+                  style={{
+                    margin: "14px 0 0 0",
+                    fontSize: 18,
+                    fontWeight: 800,
+                    color: "#fff",
+                    fontFamily: "system-ui, -apple-system, sans-serif",
+                    letterSpacing: 0.3,
+                  }}
+                >
+                  {msg.pdfTitle}
+                </p>
               </div>
             )}
             <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 4px 4px 4px" }}>
