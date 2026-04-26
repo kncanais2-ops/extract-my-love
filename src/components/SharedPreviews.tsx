@@ -425,16 +425,90 @@ export interface WhatsAppMessage {
   pdfCaption?: string;
 }
 
+export type WhatsAppPixKeyType = "random" | "cpf" | "email" | "phone";
+
 export interface WhatsAppData {
   contactName: string;
   avatar: string;
   unreadCount: string;
-  messages: WhatsAppMessage[];
+  // Greeting (sent — fixed/editable text)
+  greetingText: string;
+  greetingTime: string;
+  greetingReadStatus: WhatsAppReadStatus;
+  // Reaction (received — randomizable)
+  reactionText: string;
+  reactionTime: string;
+  // Pix key (received — auto-generated)
+  pixKey: string;
+  pixKeyType: WhatsAppPixKeyType;
+  pixKeyTime: string;
+  // Payment confirmation (sent — fixed/editable)
+  paymentText: string;
+  paymentTime: string;
+  paymentReadStatus: WhatsAppReadStatus;
+  // Receipt
   receiptPosition: "before" | "after";
   receiptFilename: string;
   receiptCaption: string;
   receiptTime: string;
   receiptReadStatus: WhatsAppReadStatus;
+}
+
+export const REACTION_VARIATIONS = [
+  "Oii nem acredito que eu ganhei",
+  "Sério??? Que felicidade!",
+  "Não tô acreditando!! Obrigado!!!",
+  "Caraca!! Mt obrigado!!",
+  "Que doideira mn, primeira vez que ganho algo assim",
+  "Nossa que sorte minha kkkk",
+  "Mds eu ganhei mesmo??",
+  "Aaaa que coisa boa!!!",
+  "Não sabia que eu podia ganhar",
+  "Vou te mandar minha chave já já",
+  "Putz que bom!! Eu precisava muito disso!!",
+  "Verdade?? Tava precisando demais!!",
+  "Carai não acredito kkkk muito obg",
+  "Você é meu anjo da guarda kkkk",
+  "Olha eu nem to acreditando",
+  "Caraca, é serio mesmo? muito obg",
+  "Que demais!!! Obrigado mt obg",
+  "Aaaaa eu fiquei muito feliz!!!",
+  "Nossa, eu nem sabia que tinha sido sorteado",
+  "Tô em choque kkkk muito obrigado",
+];
+
+export function generateReactionText(exclude?: string): string {
+  let pick = REACTION_VARIATIONS[Math.floor(Math.random() * REACTION_VARIATIONS.length)];
+  let attempts = 0;
+  while (pick === exclude && attempts < 5) {
+    pick = REACTION_VARIATIONS[Math.floor(Math.random() * REACTION_VARIATIONS.length)];
+    attempts++;
+  }
+  return pick;
+}
+
+export function generatePixKey(type: WhatsAppPixKeyType): string {
+  const rand = (n: number, chars: string) =>
+    Array.from({ length: n }, () => chars.charAt(Math.floor(Math.random() * chars.length))).join("");
+  switch (type) {
+    case "cpf": {
+      const d = rand(11, "0123456789");
+      return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9, 11)}`;
+    }
+    case "email": {
+      const names = ["lucas", "maria", "joao", "ana", "pedro", "julia", "carlos", "fernanda", "rafael", "beatriz", "thiago", "camila", "bruno", "amanda", "gabriel"];
+      const domains = ["gmail.com", "hotmail.com", "outlook.com", "yahoo.com.br"];
+      return `${names[Math.floor(Math.random() * names.length)]}${rand(3, "0123456789")}@${domains[Math.floor(Math.random() * domains.length)]}`;
+    }
+    case "phone": {
+      return `+55 ${rand(2, "123456789")} 9${rand(4, "0123456789")}-${rand(4, "0123456789")}`;
+    }
+    case "random":
+    default: {
+      const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+      return `${rand(12, chars)}-${rand(11, chars)}-${rand(10, chars)}`;
+    }
+  }
 }
 
 export function generateReceiptFilename(): string {
@@ -480,18 +554,39 @@ function WhatsAppBubble({ msg, isFirst }: { msg: WhatsAppMessage; isFirst: boole
         style={{
           backgroundColor: bubbleBg,
           borderRadius: tailRadius,
-          maxWidth: "78%",
+          maxWidth: "88%",
           padding: "6px 9px 6px 10px",
           boxShadow: "0 1px 0.5px rgba(0,0,0,0.13)",
           position: "relative",
         }}
       >
         {msg.type === "text" && (
-          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", gap: 8 }}>
-            <span style={{ fontSize: 14.5, color: "#111b21", lineHeight: 1.35, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+          <div style={{ position: "relative", paddingBottom: 12, minWidth: isRight ? 64 : 44 }}>
+            <span
+              style={{
+                fontSize: 14.5,
+                color: "#111b21",
+                lineHeight: 1.35,
+                whiteSpace: "pre-wrap",
+                overflowWrap: "anywhere",
+                wordBreak: "normal",
+              }}
+            >
               {msg.text || ""}
             </span>
-            <span style={{ fontSize: 11, color: "#667781", display: "inline-flex", alignItems: "center", marginLeft: "auto", marginBottom: -1 }}>
+            <span
+              style={{
+                position: "absolute",
+                right: 0,
+                bottom: 0,
+                fontSize: 11,
+                color: "#667781",
+                display: "inline-flex",
+                alignItems: "center",
+                whiteSpace: "nowrap",
+                lineHeight: 1,
+              }}
+            >
               {msg.time}
               {isRight && <WhatsAppReadMarks status={msg.readStatus} />}
             </span>
@@ -536,36 +631,41 @@ function WhatsAppBubble({ msg, isFirst }: { msg: WhatsAppMessage; isFirst: boole
         )}
 
         {msg.type === "pdf" && (
-          <div style={{ width: 280 }}>
+          <div style={{ width: "100%", minWidth: 220 }}>
             {msg.pdfTitle && (
-              <div
-                style={{
-                  margin: "-6px -9px 0 -10px",
-                  background: "url(/caixa-receipt-bg.svg) no-repeat",
-                  backgroundSize: "100% 100%",
-                  padding: "16px 18px 30px 18px",
-                  color: "#fff",
-                }}
-              >
-                <img src="/caixa-logo.png" alt="CAIXA" style={{ height: 22, width: "auto", display: "block" }} />
-                <p
+              <>
+                <div
                   style={{
-                    margin: "14px 0 0 0",
-                    fontSize: 18,
-                    fontWeight: 800,
+                    backgroundColor: "#fff",
+                    backgroundImage: "url(/caixa-receipt-bg.svg)",
+                    backgroundSize: "100% 100%",
+                    backgroundRepeat: "no-repeat",
+                    padding: "16px 18px 30px 18px",
                     color: "#fff",
-                    fontFamily: "system-ui, -apple-system, sans-serif",
-                    letterSpacing: 0.3,
+                    borderRadius: "6px 6px 0 0",
                   }}
                 >
-                  {msg.pdfTitle}
-                </p>
-              </div>
+                  <img src="/caixa-logo.png" alt="CAIXA" style={{ height: 18, width: "auto", display: "block" }} />
+                  <p
+                    style={{
+                      margin: "10px 0 0 0",
+                      fontSize: 17,
+                      fontWeight: 800,
+                      color: "#fff",
+                      fontFamily: "system-ui, -apple-system, sans-serif",
+                      letterSpacing: 0.3,
+                      lineHeight: 1.1,
+                    }}
+                  >
+                    {msg.pdfTitle}
+                  </p>
+                </div>
+                {/* Faixa branca abaixo do zigzag */}
+                <div style={{ backgroundColor: "#fff", height: 12 }} />
+              </>
             )}
-            <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 4px 4px 4px" }}>
-              <div style={{ width: 32, height: 38, background: "#e44d4d", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <span style={{ color: "#fff", fontSize: 9, fontWeight: 700 }}>PDF</span>
-              </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 8px", backgroundColor: "#d5f3cf", borderRadius: "0 0 6px 6px", marginTop: 0 }}>
+              <img src="/pdf-icon.svg" alt="PDF" style={{ width: 36, height: 41, flexShrink: 0, display: "block" }} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{ fontSize: 13, fontWeight: 500, color: "#111b21", margin: 0, wordBreak: "break-all", lineHeight: 1.3 }}>
                   {msg.pdfFilename || "documento.pdf"}
@@ -576,14 +676,15 @@ function WhatsAppBubble({ msg, isFirst }: { msg: WhatsAppMessage; isFirst: boole
               </div>
             </div>
             {msg.pdfCaption && (
-              <p style={{ fontSize: 14.5, color: "#0a7c2f", textDecoration: "underline", margin: 0, marginTop: 8, paddingTop: 6, borderTop: "1px solid rgba(0,0,0,0.06)" }}>
-                {msg.pdfCaption}
+              <p style={{ fontSize: 14.5, margin: "6px 0 0 0", padding: "0 4px" }}>
+                <span style={{ color: "#1a1a1a" }}>{msg.pdfCaption.charAt(0)}</span>
+                <span style={{ color: "#0a7c2f", textDecoration: "underline" }}>{msg.pdfCaption.slice(1)}</span>
               </p>
             )}
-            <span style={{ fontSize: 11, color: "#667781", display: "block", textAlign: "right", marginTop: 4 }}>
-              {msg.time}
+            <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 2, marginTop: 4, padding: "0 4px" }}>
+              <span style={{ fontSize: 11, color: "#667781" }}>{msg.time}</span>
               {isRight && <WhatsAppReadMarks status={msg.readStatus} />}
-            </span>
+            </div>
           </div>
         )}
       </div>
@@ -626,7 +727,7 @@ function WhatsAppImageGroup({ images, time, readStatus, isRight }: { images: str
   );
 }
 
-const WHATSAPP_BG_COLOR = "#EFE7DD";
+const WHATSAPP_BG_COLOR = "#e7e4df";
 
 export function PreviewWhatsApp({ data }: { data: WhatsAppData }) {
   return (
@@ -638,12 +739,12 @@ export function PreviewWhatsApp({ data }: { data: WhatsAppData }) {
       fontFamily: "-apple-system, 'SF Pro Text', system-ui, sans-serif",
     }}>
       {/* Header */}
-      <div style={{ background: "#f7f4ef", padding: "10px 14px 12px 14px", borderBottom: "1px solid #d9d4cc" }}>
+      <div style={{ background: "#e7e4df", padding: "10px 14px 12px 14px", borderBottom: "1px solid #d9d4cc" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0 }}>
-            <ArrowLeft size={22} style={{ color: "#007aff", flexShrink: 0 }} />
+            <ArrowLeft size={22} style={{ color: "#1a1a1a", flexShrink: 0 }} />
             {data.unreadCount && (
-              <span style={{ color: "#007aff", fontSize: 17, fontWeight: 400, flexShrink: 0 }}>{data.unreadCount}</span>
+              <span style={{ color: "#1a1a1a", fontSize: 17, fontWeight: 400, flexShrink: 0 }}>{data.unreadCount}</span>
             )}
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginLeft: 8, minWidth: 0 }}>
               {data.avatar ? (
@@ -657,19 +758,25 @@ export function PreviewWhatsApp({ data }: { data: WhatsAppData }) {
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 18, flexShrink: 0 }}>
-            <Video size={22} style={{ color: "#007aff" }} strokeWidth={1.6} />
-            <Phone size={20} style={{ color: "#007aff" }} strokeWidth={1.6} />
+            <Video size={22} style={{ color: "#1a1a1a" }} strokeWidth={1.6} />
+            <Phone size={20} style={{ color: "#1a1a1a" }} strokeWidth={1.6} />
           </div>
         </div>
       </div>
 
-      {/* Messages — receipt is fixed and injected at chosen position */}
+      {/* Messages — fixed template + receipt injected at chosen position */}
       <div style={{ padding: "10px 0 12px 0", display: "flex", flexDirection: "column", gap: 4 }}>
         {(() => {
+          const templateMessages: WhatsAppMessage[] = [
+            { id: "g", type: "text", side: "right", time: data.greetingTime, readStatus: data.greetingReadStatus, text: data.greetingText },
+            { id: "r", type: "text", side: "left", time: data.reactionTime, readStatus: "none", text: data.reactionText },
+            { id: "k", type: "text", side: "left", time: data.pixKeyTime, readStatus: "none", text: data.pixKey },
+            { id: "p", type: "text", side: "right", time: data.paymentTime, readStatus: data.paymentReadStatus, text: data.paymentText },
+          ];
           const receipt = buildReceiptMessage(data);
           const all = data.receiptPosition === "before"
-            ? [receipt, ...data.messages]
-            : [...data.messages, receipt];
+            ? [receipt, ...templateMessages]
+            : [...templateMessages, receipt];
           return all.map((msg, i) => {
             const prev = all[i - 1];
             const isFirst = !prev || prev.side !== msg.side;
@@ -683,14 +790,14 @@ export function PreviewWhatsApp({ data }: { data: WhatsAppData }) {
       </div>
 
       {/* Composer */}
-      <div style={{ background: "#f7f4ef", padding: "8px 10px 10px 10px", borderTop: "1px solid #d9d4cc", display: "flex", alignItems: "center", gap: 8 }}>
-        <Plus size={26} style={{ color: "#007aff", flexShrink: 0 }} strokeWidth={1.5} />
+      <div style={{ background: "#e7e4df", padding: "8px 10px 10px 10px", borderTop: "1px solid #d9d4cc", display: "flex", alignItems: "center", gap: 8 }}>
+        <Plus size={26} style={{ color: "#1a1a1a", flexShrink: 0 }} strokeWidth={1.5} />
         <div style={{ flex: 1, background: "#fff", borderRadius: 18, padding: "6px 10px", display: "flex", alignItems: "center", gap: 6, border: "1px solid #d9d4cc", minHeight: 32 }}>
           <span style={{ flex: 1, fontSize: 13, color: "transparent" }}>x</span>
           <Smile size={20} style={{ color: "#54656f" }} strokeWidth={1.6} />
         </div>
-        <Camera size={24} style={{ color: "#007aff", flexShrink: 0 }} strokeWidth={1.6} />
-        <Mic size={22} style={{ color: "#007aff", flexShrink: 0 }} strokeWidth={1.6} />
+        <Camera size={24} style={{ color: "#1a1a1a", flexShrink: 0 }} strokeWidth={1.6} />
+        <Mic size={22} style={{ color: "#1a1a1a", flexShrink: 0 }} strokeWidth={1.6} />
       </div>
     </div>
   );

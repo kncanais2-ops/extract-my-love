@@ -28,8 +28,8 @@ import {
   formatCurrencyInput, calcTotal, generatePixId, maskCPF, maskCNPJ, PixData,
   PreviewInter, PreviewNeon, PreviewNubank, PreviewC6, PreviewPicPay,
   PreviewMercadoPago, PreviewEfi, PreviewInfinitePay, PreviewSantander, PreviewContaSimples, PreviewPixComprovante,
-  PreviewWhatsApp, WhatsAppData, WhatsAppMessage, WhatsAppMessageType, WhatsAppReadStatus,
-  generateReceiptFilename, generateReceiptCaption
+  PreviewWhatsApp, WhatsAppData, WhatsAppReadStatus, WhatsAppPixKeyType,
+  generateReceiptFilename, generateReceiptCaption, generateReactionText, generatePixKey
 } from "./SharedPreviews";
 
 /* ── Brasília time helpers ─────────────────────────────── */
@@ -206,7 +206,7 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
       await channel.send({
         type: 'broadcast',
         event: 'update-obs',
-        payload: { bank, transactions, dateLabel, pixData, whatsappData }
+        payload: { bank, transactions, dateLabel, pixData, whatsappData, phoneStatusTime }
       });
       toast.success("Enviado para a tela do OBS com sucesso!");
     } catch (e) {
@@ -217,6 +217,7 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
   };
 
   const [bank, setBank] = useState<BankType>("inter");
+  const [phoneStatusTime, setPhoneStatusTime] = useState(getBrasiliaTime());
   const [transactions, setTransactions] = useState<Transaction[]>([
     { id: "1", name: "", value: "", category: "Sem categoria", time: getBrasiliaTime() },
   ]);
@@ -249,12 +250,22 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
     setPixData((prev) => ({ ...prev, [field]: sanitized }));
   };
 
-  // WhatsApp state — receipt is fixed/auto-generated; user only chooses position
+  // WhatsApp state — fixed template (greeting → reaction → pix → payment → receipt)
   const [whatsappData, setWhatsappData] = useState<WhatsAppData>({
     contactName: "Jota",
     avatar: "",
     unreadCount: "",
-    messages: [],
+    greetingText: "Parabéns 🎉, você ficou em TOP 1 em nossas premiações, me envie sua chave Pix aleatoria por favor.",
+    greetingTime: getBrasiliaTime(),
+    greetingReadStatus: "read",
+    reactionText: generateReactionText(),
+    reactionTime: getBrasiliaTime(),
+    pixKey: generatePixKey("random"),
+    pixKeyType: "random",
+    pixKeyTime: getBrasiliaTime(),
+    paymentText: "Pagamento enviado com sucesso.",
+    paymentTime: getBrasiliaTime(),
+    paymentReadStatus: "read",
     receiptPosition: "after",
     receiptFilename: generateReceiptFilename(),
     receiptCaption: generateReceiptCaption(),
@@ -262,12 +273,8 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
     receiptReadStatus: "read",
   });
 
-  const updateWhatsappField = (field: "contactName" | "avatar" | "unreadCount", val: string) => {
+  const updateWhatsappField = <K extends keyof WhatsAppData>(field: K, val: WhatsAppData[K]) => {
     setWhatsappData((prev) => ({ ...prev, [field]: val }));
-  };
-
-  const updateReceiptField = (field: "receiptPosition" | "receiptTime" | "receiptReadStatus", val: string) => {
-    setWhatsappData((prev) => ({ ...prev, [field]: val } as WhatsAppData));
   };
 
   const regenerateReceipt = () => {
@@ -278,45 +285,16 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
     }));
   };
 
-  const addWhatsappMessage = (type: WhatsAppMessageType = "text") => {
+  const randomizeReaction = () => {
+    setWhatsappData((prev) => ({ ...prev, reactionText: generateReactionText(prev.reactionText) }));
+  };
+
+  const randomizePixKey = (type?: WhatsAppPixKeyType) => {
     setWhatsappData((prev) => ({
       ...prev,
-      messages: [
-        ...prev.messages,
-        {
-          id: Date.now().toString(),
-          type,
-          side: "right",
-          time: getBrasiliaTime(),
-          readStatus: type === "text" ? "read" : "none",
-          text: type === "text" ? "" : undefined,
-          duration: type === "voice-call" ? "1 minuto" : undefined,
-          images: type === "image" ? [] : undefined,
-        },
-      ],
+      pixKeyType: type ?? prev.pixKeyType,
+      pixKey: generatePixKey(type ?? prev.pixKeyType),
     }));
-  };
-
-  const updateWhatsappMessage = (id: string, patch: Partial<WhatsAppMessage>) => {
-    setWhatsappData((prev) => ({
-      ...prev,
-      messages: prev.messages.map((m) => (m.id === id ? { ...m, ...patch } : m)),
-    }));
-  };
-
-  const removeWhatsappMessage = (id: string) => {
-    setWhatsappData((prev) => ({ ...prev, messages: prev.messages.filter((m) => m.id !== id) }));
-  };
-
-  const moveWhatsappMessage = (id: string, dir: -1 | 1) => {
-    setWhatsappData((prev) => {
-      const idx = prev.messages.findIndex((m) => m.id === id);
-      const next = idx + dir;
-      if (idx < 0 || next < 0 || next >= prev.messages.length) return prev;
-      const arr = [...prev.messages];
-      [arr[idx], arr[next]] = [arr[next], arr[idx]];
-      return { ...prev, messages: arr };
-    });
   };
 
   const onAvatarUpload = (file: File | undefined) => {
@@ -326,24 +304,46 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
     reader.readAsDataURL(file);
   };
 
-  const onMessageImagesUpload = (id: string, files: FileList | null) => {
-    if (!files || files.length === 0) return;
-    const readers = Array.from(files).map(
-      (f) =>
-        new Promise<string>((resolve) => {
-          const r = new FileReader();
-          r.onload = () => resolve(String(r.result || ""));
-          r.readAsDataURL(f);
-        })
-    );
-    Promise.all(readers).then((dataUrls) => {
-      setWhatsappData((prev) => ({
-        ...prev,
-        messages: prev.messages.map((m) =>
-          m.id === id ? { ...m, images: [...(m.images || []), ...dataUrls] } : m
-        ),
-      }));
-    });
+  const AVATAR_POOL = useMemo(
+    () => [
+      // randomuser.me — 200 fotos (100 homens + 100 mulheres) — fotos stock reais
+      ...Array.from({ length: 100 }, (_, i) => `https://randomuser.me/api/portraits/men/${i}.jpg`),
+      ...Array.from({ length: 100 }, (_, i) => `https://randomuser.me/api/portraits/women/${i}.jpg`),
+      // i.pravatar.cc — 800 URLs com seeds diferentes (rostos variados via hash)
+      ...Array.from({ length: 800 }, (_, i) => `https://i.pravatar.cc/300?u=face${i}`),
+    ],
+    []
+  );
+  const usedAvatarsRef = useRef<Set<string>>(new Set());
+
+  const randomizeAvatar = () => {
+    if (usedAvatarsRef.current.size >= AVATAR_POOL.length - 20) {
+      usedAvatarsRef.current.clear();
+    }
+    const available = AVATAR_POOL.filter((u) => !usedAvatarsRef.current.has(u));
+    const pool = available.length > 0 ? available : AVATAR_POOL;
+    const url = pool[Math.floor(Math.random() * pool.length)];
+    usedAvatarsRef.current.add(url);
+
+    // Carrega via canvas + crossOrigin pra converter em data URL
+    // (resolve CORS no html2canvas e funciona no OBS sem refetch)
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return updateWhatsappField("avatar", url);
+      ctx.drawImage(img, 0, 0);
+      try {
+        updateWhatsappField("avatar", canvas.toDataURL("image/jpeg", 0.85));
+      } catch {
+        updateWhatsappField("avatar", url);
+      }
+    };
+    img.onerror = () => updateWhatsappField("avatar", url);
+    img.src = url;
   };
 
   const isPixMode = bank === "pix-comprovante";
@@ -567,6 +567,7 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
       const canvas = await html2canvas(extratoRef.current, {
         backgroundColor: phoneBg,
         scale: 2,
+        useCORS: true,
       });
       const link = document.createElement("a");
       link.download = `extrato-${bank}.png`;
@@ -584,6 +585,7 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
       const canvas = await html2canvas(extratoRef.current, {
         backgroundColor: phoneBg,
         scale: 2,
+        useCORS: true,
       });
       canvas.toBlob(async (blob) => {
         if (!blob) return;
@@ -624,14 +626,14 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
     : bank === "contasimples"
     ? "#fefdf8"
     : bank === "whatsapp"
-    ? "#EFE7DD"
+    ? "#e7e4df"
     : "#ffffff";
   const currentBank = BANKS.find((b) => b.id === bank);
 
   return (
-    <div className="bg-background flex items-start justify-center px-4 py-6 gap-6 flex-wrap lg:flex-nowrap max-w-6xl mx-auto">
+    <div className={`bg-background flex items-start justify-center px-4 py-6 gap-6 flex-wrap lg:flex-nowrap mx-auto ${isWhatsAppMode ? "max-w-none" : "max-w-7xl"}`}>
       {/* Form */}
-      <div className="w-full max-w-lg">
+      <div className={`w-full ${isWhatsAppMode ? "max-w-none flex-1" : "max-w-lg"}`}>
         {/* Form Card */}
         <div className="bg-card rounded-2xl border border-border/50 shadow-lg p-5 space-y-5">
           <div className="flex items-center justify-between">
@@ -826,6 +828,7 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
             <>
               {/* WhatsApp form */}
               <div className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
                 <div className="bg-card/50 backdrop-blur-sm rounded-xl p-4 border border-border/50 space-y-3">
                   <span className="text-sm font-medium text-muted-foreground">Contato</span>
                   <input
@@ -848,6 +851,13 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
                       <input type="file" accept="image/*" onChange={(e) => onAvatarUpload(e.target.files?.[0])} className="hidden" />
                       {whatsappData.avatar ? "Trocar foto" : "Escolher foto do contato"}
                     </label>
+                    <button
+                      onClick={randomizeAvatar}
+                      className="shrink-0 bg-secondary text-secondary-foreground rounded-lg p-2 border border-border hover:bg-secondary/80 transition-colors"
+                      title="Foto aleatória de pessoa real (1000 disponíveis, sem repetir)"
+                    >
+                      <Dices size={16} />
+                    </button>
                     {whatsappData.avatar && (
                       <button
                         onClick={() => updateWhatsappField("avatar", "")}
@@ -881,7 +891,7 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
                   <div className="grid grid-cols-2 gap-2">
                     <select
                       value={whatsappData.receiptPosition}
-                      onChange={(e) => updateReceiptField("receiptPosition", e.target.value)}
+                      onChange={(e) => updateWhatsappField("receiptPosition", e.target.value as "before" | "after")}
                       className="bg-background border border-border rounded-lg px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                     >
                       <option value="after">Depois das mensagens</option>
@@ -889,24 +899,24 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
                     </select>
                     <select
                       value={whatsappData.receiptReadStatus}
-                      onChange={(e) => updateReceiptField("receiptReadStatus", e.target.value)}
+                      onChange={(e) => updateWhatsappField("receiptReadStatus", e.target.value as WhatsAppReadStatus)}
                       className="bg-background border border-border rounded-lg px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                     >
-                      <option value="none">Sem ✓</option>
-                      <option value="sent">✓ Enviado</option>
-                      <option value="delivered">✓✓ Entregue</option>
-                      <option value="read">✓✓ Lida (azul)</option>
+                      <option value="none">—</option>
+                      <option value="sent">✓</option>
+                      <option value="delivered">✓✓</option>
+                      <option value="read">✓✓ azul</option>
                     </select>
                   </div>
                   <div className="flex gap-2">
                     <input
                       type="text" placeholder="Hora (07:21)"
                       value={whatsappData.receiptTime}
-                      onChange={(e) => updateReceiptField("receiptTime", maskTime(e.target.value))}
+                      onChange={(e) => updateWhatsappField("receiptTime", maskTime(e.target.value))}
                       className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                     />
                     <button
-                      onClick={() => updateReceiptField("receiptTime", getBrasiliaTime())}
+                      onClick={() => updateWhatsappField("receiptTime", getBrasiliaTime())}
                       className="shrink-0 bg-background border border-border rounded-lg px-3 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                       title="Atualizar para horário de Brasília"
                     >
@@ -915,111 +925,160 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
                   </div>
                 </div>
 
-                {whatsappData.messages.map((m, idx) => (
-                  <div key={m.id} className="bg-card/50 backdrop-blur-sm rounded-xl p-3 border border-border/50 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium text-muted-foreground">Mensagem {idx + 1}</span>
-                      <div className="flex items-center gap-1">
-                        <button onClick={() => moveWhatsappMessage(m.id, -1)} disabled={idx === 0} className="text-muted-foreground hover:text-foreground p-1 rounded disabled:opacity-30">↑</button>
-                        <button onClick={() => moveWhatsappMessage(m.id, 1)} disabled={idx === whatsappData.messages.length - 1} className="text-muted-foreground hover:text-foreground p-1 rounded disabled:opacity-30">↓</button>
-                        <button onClick={() => removeWhatsappMessage(m.id)} className="text-destructive hover:text-destructive/80 p-1 rounded hover:bg-destructive/10" title="Remover">
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2">
-                      <select
-                        value={m.type}
-                        onChange={(e) => updateWhatsappMessage(m.id, { type: e.target.value as WhatsAppMessageType })}
-                        className="bg-background border border-border rounded-lg px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                      >
-                        <option value="text">Texto</option>
-                        <option value="voice-call">Ligação de voz</option>
-                        <option value="missed-call">Ligação perdida</option>
-                        <option value="image">Imagem(s)</option>
-                      </select>
-                      <select
-                        value={m.side}
-                        onChange={(e) => updateWhatsappMessage(m.id, { side: e.target.value as "left" | "right" })}
-                        className="bg-background border border-border rounded-lg px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                      >
-                        <option value="left">Recebida (cinza)</option>
-                        <option value="right">Enviada (verde)</option>
-                      </select>
-                    </div>
-
-                    {m.type === "text" && (
-                      <textarea
-                        placeholder="Texto da mensagem"
-                        value={m.text || ""}
-                        onChange={(e) => updateWhatsappMessage(m.id, { text: e.target.value })}
-                        className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-y min-h-[60px]"
-                      />
-                    )}
-
-                    {m.type === "voice-call" && (
-                      <input
-                        type="text" placeholder="Duração (ex: 16 minutos)"
-                        value={m.duration || ""}
-                        onChange={(e) => updateWhatsappMessage(m.id, { duration: e.target.value })}
-                        className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                      />
-                    )}
-
-                    {m.type === "image" && (
-                      <div className="space-y-2">
-                        <label className="block text-xs text-muted-foreground bg-background border border-border rounded-lg px-3 py-2 cursor-pointer hover:bg-muted text-center">
-                          <input type="file" accept="image/*" multiple onChange={(e) => { onMessageImagesUpload(m.id, e.target.files); e.target.value = ""; }} className="hidden" />
-                          {m.images && m.images.length > 0 ? `Adicionar mais (${m.images.length} adicionadas)` : "Escolher imagens"}
-                        </label>
-                        {m.images && m.images.length > 0 && (
-                          <div className="flex gap-1 flex-wrap">
-                            {m.images.map((src, i) => (
-                              <div key={i} className="relative w-12 h-12">
-                                <img src={src} alt="" className="w-full h-full object-cover rounded border border-border" />
-                                <button
-                                  onClick={() => updateWhatsappMessage(m.id, { images: (m.images || []).filter((_, j) => j !== i) })}
-                                  className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full w-4 h-4 flex items-center justify-center text-[10px]"
-                                >×</button>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    <div className="flex gap-2">
-                      <input
-                        type="text" placeholder="Hora (06:57)"
-                        value={m.time}
-                        onChange={(e) => updateWhatsappMessage(m.id, { time: maskTime(e.target.value) })}
-                        className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                      />
-                      {m.side === "right" && (
-                        <select
-                          value={m.readStatus}
-                          onChange={(e) => updateWhatsappMessage(m.id, { readStatus: e.target.value as WhatsAppReadStatus })}
-                          className="bg-background border border-border rounded-lg px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                        >
-                          <option value="none">Sem ✓</option>
-                          <option value="sent">✓ Enviado</option>
-                          <option value="delivered">✓✓ Entregue</option>
-                          <option value="read">✓✓ Lida (azul)</option>
-                        </select>
-                      )}
-                    </div>
+                {/* 1. Saudação (enviada por você - fixa, editável) */}
+                <div className="bg-card/50 backdrop-blur-sm rounded-xl p-3 border border-border/50 space-y-2">
+                  <span className="text-xs font-medium text-muted-foreground">1. Saudação (enviada — verde)</span>
+                  <textarea
+                    value={whatsappData.greetingText}
+                    onChange={(e) => updateWhatsappField("greetingText", e.target.value)}
+                    className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-y min-h-[60px]"
+                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="text" placeholder="Hora (10:06)"
+                      value={whatsappData.greetingTime}
+                      onChange={(e) => updateWhatsappField("greetingTime", maskTime(e.target.value))}
+                      className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                    />
+                    <button
+                      onClick={() => updateWhatsappField("greetingTime", getBrasiliaTime())}
+                      className="shrink-0 bg-background border border-border rounded-lg px-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                      title="Atualizar para horário de Brasília"
+                    >
+                      <RotateCcw size={14} />
+                    </button>
+                    <select
+                      value={whatsappData.greetingReadStatus}
+                      onChange={(e) => updateWhatsappField("greetingReadStatus", e.target.value as WhatsAppReadStatus)}
+                      className="bg-background border border-border rounded-lg px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                    >
+                      <option value="none">—</option>
+                      <option value="sent">✓</option>
+                      <option value="delivered">✓✓</option>
+                      <option value="read">✓✓ azul</option>
+                    </select>
                   </div>
-                ))}
+                </div>
+
+                {/* 2. Reação (recebida - randomizável) */}
+                <div className="bg-card/50 backdrop-blur-sm rounded-xl p-3 border border-border/50 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-muted-foreground">2. Reação da pessoa (recebida — cinza)</span>
+                    <button
+                      onClick={randomizeReaction}
+                      className="text-xs text-muted-foreground hover:text-foreground px-2 py-1 rounded-md hover:bg-muted flex items-center gap-1"
+                      title="Aleatorizar texto"
+                    >
+                      <Dices size={12} /> Aleatorizar
+                    </button>
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={whatsappData.reactionText}
+                      onChange={(e) => updateWhatsappField("reactionText", e.target.value)}
+                      className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                    />
+                    <input
+                      type="text" placeholder="Hora"
+                      value={whatsappData.reactionTime}
+                      onChange={(e) => updateWhatsappField("reactionTime", maskTime(e.target.value))}
+                      className="w-20 bg-background border border-border rounded-lg px-2 py-2 text-sm text-foreground text-center focus:outline-none focus:ring-2 focus:ring-ring"
+                    />
+                    <button
+                      onClick={() => updateWhatsappField("reactionTime", getBrasiliaTime())}
+                      className="shrink-0 bg-background border border-border rounded-lg px-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                      title="Atualizar para horário de Brasília"
+                    >
+                      <RotateCcw size={14} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* 3. Chave Pix (recebida - auto-gerada) */}
+                <div className="bg-card/50 backdrop-blur-sm rounded-xl p-3 border border-border/50 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-muted-foreground">3. Chave Pix (recebida — cinza)</span>
+                    <button
+                      onClick={() => randomizePixKey()}
+                      className="text-xs text-muted-foreground hover:text-foreground px-2 py-1 rounded-md hover:bg-muted flex items-center gap-1"
+                      title="Gerar nova chave"
+                    >
+                      <Dices size={12} /> Gerar nova
+                    </button>
+                  </div>
+                  <select
+                    value={whatsappData.pixKeyType}
+                    onChange={(e) => randomizePixKey(e.target.value as WhatsAppPixKeyType)}
+                    className="w-full bg-background border border-border rounded-lg px-2 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    <option value="random">Aleatória (alfanumérica)</option>
+                    <option value="cpf">CPF</option>
+                    <option value="email">E-mail</option>
+                    <option value="phone">Telefone</option>
+                  </select>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={whatsappData.pixKey}
+                      onChange={(e) => updateWhatsappField("pixKey", e.target.value)}
+                      className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring font-mono text-xs"
+                    />
+                    <input
+                      type="text" placeholder="Hora"
+                      value={whatsappData.pixKeyTime}
+                      onChange={(e) => updateWhatsappField("pixKeyTime", maskTime(e.target.value))}
+                      className="w-20 bg-background border border-border rounded-lg px-2 py-2 text-sm text-foreground text-center focus:outline-none focus:ring-2 focus:ring-ring"
+                    />
+                    <button
+                      onClick={() => updateWhatsappField("pixKeyTime", getBrasiliaTime())}
+                      className="shrink-0 bg-background border border-border rounded-lg px-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                      title="Atualizar para horário de Brasília"
+                    >
+                      <RotateCcw size={14} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* 4. Confirmação (enviada por você - fixa, editável) */}
+                <div className="bg-card/50 backdrop-blur-sm rounded-xl p-3 border border-border/50 space-y-2">
+                  <span className="text-xs font-medium text-muted-foreground">4. Confirmação (enviada — verde)</span>
+                  <input
+                    type="text"
+                    value={whatsappData.paymentText}
+                    onChange={(e) => updateWhatsappField("paymentText", e.target.value)}
+                    className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="text" placeholder="Hora (10:10)"
+                      value={whatsappData.paymentTime}
+                      onChange={(e) => updateWhatsappField("paymentTime", maskTime(e.target.value))}
+                      className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                    />
+                    <button
+                      onClick={() => updateWhatsappField("paymentTime", getBrasiliaTime())}
+                      className="shrink-0 bg-background border border-border rounded-lg px-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                      title="Atualizar para horário de Brasília"
+                    >
+                      <RotateCcw size={14} />
+                    </button>
+                    <select
+                      value={whatsappData.paymentReadStatus}
+                      onChange={(e) => updateWhatsappField("paymentReadStatus", e.target.value as WhatsAppReadStatus)}
+                      className="bg-background border border-border rounded-lg px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                    >
+                      <option value="none">—</option>
+                      <option value="sent">✓</option>
+                      <option value="delivered">✓✓</option>
+                      <option value="read">✓✓ azul</option>
+                    </select>
+                  </div>
+                </div>
+                </div>
               </div>
 
               <div className="flex gap-2">
-                <button
-                  onClick={() => addWhatsappMessage("text")}
-                  className="flex-1 flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-lg py-2.5 text-sm font-medium hover:bg-primary/90 transition-colors"
-                >
-                  <Plus size={16} /> Adicionar mensagem
-                </button>
                 {showObs && (
                   <button
                     onClick={sendToObs}
@@ -1142,7 +1201,7 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
         </div>
 
         {/* Phone mockup frame */}
-        <div className="mx-auto rounded-[2.5rem] border-[6px] border-gray-800 bg-gray-800 shadow-2xl overflow-hidden" style={{ maxWidth: 400 }}>
+        <div className="mx-auto rounded-[2.5rem] border-[6px] border-gray-800 bg-gray-800 shadow-2xl overflow-hidden" style={{ maxWidth: 380 }}>
           {/* Notch */}
           <div className="flex justify-center pt-1.5" style={{ backgroundColor: phoneBg }}>
             <div className="w-20 h-5 bg-gray-800 rounded-b-2xl" />
@@ -1150,7 +1209,7 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
 
           {/* Phone status bar */}
           <div className="flex items-center justify-between px-5 pt-1 pb-1" style={{ backgroundColor: phoneBg }}>
-            <span className="text-xs font-semibold" style={{ color: isDarkBank ? "#fff" : "#1a1a1a" }}>20:19</span>
+            <span className="text-xs font-semibold" style={{ color: isDarkBank ? "#fff" : "#1a1a1a" }}>{phoneStatusTime}</span>
             <div className="flex items-center gap-1.5">
               {/* Signal bars */}
               <div className="flex items-end gap-[2px]">
@@ -1174,6 +1233,25 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
           <div className="flex justify-center pb-2 pt-2" style={{ backgroundColor: phoneBg }}>
             <div className="w-28 h-1 rounded-full" style={{ backgroundColor: isDarkBank ? "#444" : "#d1d5db" }} />
           </div>
+        </div>
+
+        {/* Phone status time control (visible below mockup) */}
+        <div className="flex items-center gap-2 mt-3 mx-auto" style={{ maxWidth: 380 }}>
+          <label className="text-xs text-muted-foreground shrink-0">Hora do celular</label>
+          <input
+            type="text"
+            placeholder="20:19"
+            value={phoneStatusTime}
+            onChange={(e) => setPhoneStatusTime(maskTime(e.target.value))}
+            className="flex-1 bg-background border border-border rounded-lg px-3 py-1.5 text-sm text-foreground text-center focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+          <button
+            onClick={() => setPhoneStatusTime(getBrasiliaTime())}
+            className="shrink-0 bg-background border border-border rounded-lg px-2 py-1.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            title="Atualizar para horário de Brasília"
+          >
+            <RotateCcw size={14} />
+          </button>
         </div>
       </div>
     </div>
