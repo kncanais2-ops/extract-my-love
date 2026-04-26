@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  Transaction, BankType, PixData,
+  Transaction, BankType, PixData, WhatsAppData,
   PreviewInter, PreviewNeon, PreviewNubank, PreviewC6, PreviewPicPay,
-  PreviewMercadoPago, PreviewEfi, PreviewInfinitePay, PreviewSantander, PreviewContaSimples, PreviewPixComprovante
+  PreviewMercadoPago, PreviewEfi, PreviewInfinitePay, PreviewSantander, PreviewContaSimples, PreviewPixComprovante,
+  PreviewWhatsApp
 } from "@/components/SharedPreviews";
 
 export default function ObsOverlay() {
@@ -13,6 +14,7 @@ export default function ObsOverlay() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [dateLabel, setDateLabel] = useState("");
   const [pixData, setPixData] = useState<PixData | null>(null);
+  const [whatsappData, setWhatsappData] = useState<WhatsAppData | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -25,6 +27,7 @@ export default function ObsOverlay() {
         if (data.transactions) setTransactions(data.transactions);
         if (typeof data.dateLabel === "string") setDateLabel(data.dateLabel);
         if (data.pixData) setPixData(data.pixData);
+        if (data.whatsappData) setWhatsappData(data.whatsappData);
         console.log("Recebido via OBS:", data);
       })
       .subscribe();
@@ -35,9 +38,12 @@ export default function ObsOverlay() {
   }, [id]);
 
   const renderPreview = () => {
-    if (transactions.length === 0 && !pixData) return null; // Aguardando
+    if (transactions.length === 0 && !pixData && !whatsappData) return null; // Aguardando
     if (bank === "pix-comprovante" && pixData) {
       return <PreviewPixComprovante pixData={pixData} />;
+    }
+    if (bank === "whatsapp" && whatsappData) {
+      return <PreviewWhatsApp data={whatsappData} />;
     }
     const props = { transactions, dateLabel };
     switch (bank) {
@@ -56,7 +62,15 @@ export default function ObsOverlay() {
   };
 
   const isDarkBank = bank === "c6" || bank === "nubank";
-  const phoneBg = isDarkBank ? "#1a1a1a" : bank === "infinitepay" ? "#f2f2f2" : bank === "contasimples" ? "#fefdf8" : "#ffffff";
+  const phoneBg = isDarkBank
+    ? "#1a1a1a"
+    : bank === "infinitepay"
+    ? "#f2f2f2"
+    : bank === "contasimples"
+    ? "#fefdf8"
+    : bank === "whatsapp"
+    ? "#EFE7DD"
+    : "#ffffff";
 
   return (
     <div className="w-screen h-screen flex items-center justify-center p-4 bg-transparent overflow-hidden">

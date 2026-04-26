@@ -1,5 +1,7 @@
 import {
-  MoreHorizontal, MoreVertical, ArrowDownLeft, ArrowDownRight, ArrowUpRight
+  MoreHorizontal, MoreVertical, ArrowDownLeft, ArrowDownRight, ArrowUpRight,
+  ArrowLeft, Phone, PhoneIncoming, Video, Plus, Camera, Mic, Smile,
+  Check, CheckCheck
 } from "lucide-react";
 
 function PicPayPixIcon({ size = 24, color = "#1a1a1a" }: { size?: number; color?: string }) {
@@ -18,7 +20,7 @@ export interface Transaction {
   time: string;
 }
 
-export type BankType = "inter" | "neon" | "nubank" | "c6" | "picpay" | "mercadopago" | "efi" | "infinitepay" | "santander" | "contasimples" | "pix-comprovante";
+export type BankType = "inter" | "neon" | "nubank" | "c6" | "picpay" | "mercadopago" | "efi" | "infinitepay" | "santander" | "contasimples" | "whatsapp" | "pix-comprovante";
 
 export const BANKS: { id: BankType; label: string; accent: string; ring: string }[] = [
   { id: "inter", label: "Banco Inter", accent: "#f57c00", ring: "ring-orange-500" },
@@ -31,6 +33,7 @@ export const BANKS: { id: BankType; label: string; accent: string; ring: string 
   { id: "infinitepay", label: "InfinitePay", accent: "#00A868", ring: "ring-green-600" },
   { id: "santander", label: "Santander", accent: "#EC0000", ring: "ring-red-600" },
   { id: "contasimples", label: "Conta Simples", accent: "#5b4337", ring: "ring-amber-900" },
+  { id: "whatsapp", label: "WhatsApp", accent: "#25D366", ring: "ring-emerald-500" },
   { id: "pix-comprovante", label: "Comprovante Pix", accent: "#32BCAD", ring: "ring-teal-500" },
 ];
 
@@ -397,6 +400,236 @@ export function PreviewContaSimples({ transactions, dateLabel }: { transactions:
           <div />
         </div>
       ))}
+    </div>
+  );
+}
+
+/* ── WhatsApp ───────────────────────────────────────── */
+
+export type WhatsAppMessageType = "text" | "voice-call" | "missed-call" | "image" | "pdf";
+export type WhatsAppReadStatus = "none" | "sent" | "delivered" | "read";
+
+export interface WhatsAppMessage {
+  id: string;
+  type: WhatsAppMessageType;
+  side: "left" | "right";
+  time: string;
+  readStatus: WhatsAppReadStatus;
+  text?: string;
+  duration?: string;
+  images?: string[];
+  pdfTitle?: string;
+  pdfFilename?: string;
+  pdfSize?: string;
+  pdfPages?: string;
+  pdfCaption?: string;
+}
+
+export interface WhatsAppData {
+  contactName: string;
+  avatar: string;
+  unreadCount: string;
+  messages: WhatsAppMessage[];
+}
+
+function WhatsAppReadMarks({ status }: { status: WhatsAppReadStatus }) {
+  if (status === "none") return null;
+  if (status === "sent") return <Check size={14} style={{ color: "#8696a0", marginLeft: 2 }} />;
+  const color = status === "read" ? "#53bdeb" : "#8696a0";
+  return <CheckCheck size={14} style={{ color, marginLeft: 2 }} />;
+}
+
+function WhatsAppBubble({ msg, isFirst }: { msg: WhatsAppMessage; isFirst: boolean }) {
+  const isRight = msg.side === "right";
+  const bubbleBg = isRight ? "#D9FDD3" : "#FFFFFF";
+  const tailRadius = isFirst ? (isRight ? "12px 12px 4px 12px" : "12px 12px 12px 4px") : "12px";
+  return (
+    <div className={`flex ${isRight ? "justify-end" : "justify-start"} px-3`}>
+      <div
+        style={{
+          backgroundColor: bubbleBg,
+          borderRadius: tailRadius,
+          maxWidth: "78%",
+          padding: "6px 9px 6px 10px",
+          boxShadow: "0 1px 0.5px rgba(0,0,0,0.13)",
+          position: "relative",
+        }}
+      >
+        {msg.type === "text" && (
+          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", gap: 8 }}>
+            <span style={{ fontSize: 14.5, color: "#111b21", lineHeight: 1.35, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+              {msg.text || ""}
+            </span>
+            <span style={{ fontSize: 11, color: "#667781", display: "inline-flex", alignItems: "center", marginLeft: "auto", marginBottom: -1 }}>
+              {msg.time}
+              {isRight && <WhatsAppReadMarks status={msg.readStatus} />}
+            </span>
+          </div>
+        )}
+
+        {(msg.type === "voice-call" || msg.type === "missed-call") && (
+          <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "6px 6px 6px 4px", minWidth: 220 }}>
+            <div
+              style={{
+                width: 36, height: 36, borderRadius: "50%",
+                background: msg.type === "missed-call" ? "#fff" : "#fff",
+                border: "1px solid #e9edef",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                flexShrink: 0,
+              }}
+            >
+              <PhoneIncoming
+                size={18}
+                style={{ color: msg.type === "missed-call" ? "#ea0038" : "#54656f", transform: "rotate(180deg)" }}
+              />
+            </div>
+            <div style={{ flex: 1 }}>
+              <p style={{ fontSize: 14, fontWeight: 600, color: "#111b21", margin: 0 }}>
+                {msg.type === "missed-call" ? "Ligação de voz perdida" : "Ligação de voz"}
+              </p>
+              <p style={{ fontSize: 13, color: "#667781", margin: 0, marginTop: 1 }}>
+                {msg.type === "missed-call" ? "Toque para retornar" : msg.duration || "0 minutos"}
+              </p>
+            </div>
+            <span style={{ fontSize: 11, color: "#667781", alignSelf: "flex-end", marginLeft: 6 }}>
+              {msg.time}
+              {isRight && <WhatsAppReadMarks status={msg.readStatus} />}
+            </span>
+          </div>
+        )}
+
+        {msg.type === "image" && (
+          <div style={{ padding: 0 }}>
+            <WhatsAppImageGroup images={msg.images || []} time={msg.time} readStatus={msg.readStatus} isRight={isRight} />
+          </div>
+        )}
+
+        {msg.type === "pdf" && (
+          <div style={{ minWidth: 250 }}>
+            {msg.pdfTitle && (
+              <div style={{ background: "#0c4a91", color: "#fff", padding: "12px 14px", borderRadius: "8px 8px 0 0", margin: "-6px -9px 0 -10px" }}>
+                <p style={{ fontSize: 16, fontWeight: 700, margin: 0, letterSpacing: 0.5 }}>CAIXA</p>
+                <p style={{ fontSize: 15, fontWeight: 600, margin: 0, marginTop: 4 }}>{msg.pdfTitle}</p>
+              </div>
+            )}
+            <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 4px 4px 4px" }}>
+              <div style={{ width: 32, height: 38, background: "#e44d4d", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <span style={{ color: "#fff", fontSize: 9, fontWeight: 700 }}>PDF</span>
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ fontSize: 13, fontWeight: 500, color: "#111b21", margin: 0, wordBreak: "break-all", lineHeight: 1.3 }}>
+                  {msg.pdfFilename || "documento.pdf"}
+                </p>
+                <p style={{ fontSize: 11, color: "#667781", margin: 0, marginTop: 2 }}>
+                  {msg.pdfPages || "1"} página{(msg.pdfPages || "1") !== "1" ? "s" : ""} · {msg.pdfSize || "0 KB"} · pdf
+                </p>
+              </div>
+            </div>
+            {msg.pdfCaption && (
+              <p style={{ fontSize: 14.5, color: "#0a7c2f", textDecoration: "underline", margin: 0, marginTop: 8, paddingTop: 6, borderTop: "1px solid rgba(0,0,0,0.06)" }}>
+                {msg.pdfCaption}
+              </p>
+            )}
+            <span style={{ fontSize: 11, color: "#667781", display: "block", textAlign: "right", marginTop: 4 }}>
+              {msg.time}
+              {isRight && <WhatsAppReadMarks status={msg.readStatus} />}
+            </span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function WhatsAppImageGroup({ images, time, readStatus, isRight }: { images: string[]; time: string; readStatus: WhatsAppReadStatus; isRight: boolean }) {
+  const count = images.length;
+  if (count === 0) return null;
+  if (count === 1) {
+    return (
+      <div style={{ position: "relative", borderRadius: 8, overflow: "hidden" }}>
+        <img src={images[0]} alt="" style={{ display: "block", width: "100%", maxHeight: 260, objectFit: "cover" }} />
+        <span style={{ position: "absolute", bottom: 6, right: 8, fontSize: 11, color: "#fff", textShadow: "0 0 4px rgba(0,0,0,0.6)", display: "inline-flex", alignItems: "center" }}>
+          {time}
+          {isRight && <WhatsAppReadMarks status={readStatus} />}
+        </span>
+      </div>
+    );
+  }
+  const visible = images.slice(0, 4);
+  const overflow = count - 4;
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2, borderRadius: 8, overflow: "hidden", maxWidth: 280 }}>
+      {visible.map((src, i) => {
+        const showOverflow = overflow > 0 && i === 3;
+        return (
+          <div key={i} style={{ position: "relative", aspectRatio: "1", background: "#000" }}>
+            <img src={src} alt="" style={{ display: "block", width: "100%", height: "100%", objectFit: "cover", filter: showOverflow ? "blur(2px) brightness(0.6)" : undefined }} />
+            {showOverflow && (
+              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 36, fontWeight: 600 }}>
+                +{overflow}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+const WHATSAPP_BG_COLOR = "#EFE7DD";
+
+export function PreviewWhatsApp({ data }: { data: WhatsAppData }) {
+  return (
+    <div style={{ backgroundColor: WHATSAPP_BG_COLOR, fontFamily: "-apple-system, 'SF Pro Text', system-ui, sans-serif" }}>
+      {/* Header */}
+      <div style={{ background: "#f7f4ef", padding: "10px 14px 12px 14px", borderBottom: "1px solid #d9d4cc" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0 }}>
+            <ArrowLeft size={22} style={{ color: "#007aff", flexShrink: 0 }} />
+            {data.unreadCount && (
+              <span style={{ color: "#007aff", fontSize: 17, fontWeight: 400, flexShrink: 0 }}>{data.unreadCount}</span>
+            )}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginLeft: 8, minWidth: 0 }}>
+              {data.avatar ? (
+                <img src={data.avatar} alt="" style={{ width: 34, height: 34, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />
+              ) : (
+                <div style={{ width: 34, height: 34, borderRadius: "50%", background: "#dcdcdc", flexShrink: 0 }} />
+              )}
+              <span style={{ fontSize: 17, fontWeight: 600, color: "#111b21", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {data.contactName || "Contato"}
+              </span>
+            </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 18, flexShrink: 0 }}>
+            <Video size={22} style={{ color: "#007aff" }} strokeWidth={1.6} />
+            <Phone size={20} style={{ color: "#007aff" }} strokeWidth={1.6} />
+          </div>
+        </div>
+      </div>
+
+      {/* Messages */}
+      <div style={{ padding: "10px 0 12px 0", display: "flex", flexDirection: "column", gap: 4 }}>
+        {data.messages.map((msg, i) => {
+          const prev = data.messages[i - 1];
+          const isFirst = !prev || prev.side !== msg.side;
+          return (
+            <div key={msg.id} style={{ marginTop: isFirst && i > 0 ? 6 : 0 }}>
+              <WhatsAppBubble msg={msg} isFirst={isFirst} />
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Composer */}
+      <div style={{ background: "#f7f4ef", padding: "8px 10px 10px 10px", borderTop: "1px solid #d9d4cc", display: "flex", alignItems: "center", gap: 8 }}>
+        <Plus size={26} style={{ color: "#007aff", flexShrink: 0 }} strokeWidth={1.5} />
+        <div style={{ flex: 1, background: "#fff", borderRadius: 18, padding: "6px 10px", display: "flex", alignItems: "center", gap: 6, border: "1px solid #d9d4cc", minHeight: 32 }}>
+          <span style={{ flex: 1, fontSize: 13, color: "transparent" }}>x</span>
+          <Smile size={20} style={{ color: "#54656f" }} strokeWidth={1.6} />
+        </div>
+        <Camera size={24} style={{ color: "#007aff", flexShrink: 0 }} strokeWidth={1.6} />
+        <Mic size={22} style={{ color: "#007aff", flexShrink: 0 }} strokeWidth={1.6} />
+      </div>
     </div>
   );
 }
