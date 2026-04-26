@@ -22,7 +22,6 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import SuccessOverlay from "@/components/SuccessOverlay";
 
 import {
   Transaction, BankType, BANKS, CATEGORY_OPTIONS, 
@@ -215,7 +214,6 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
     }
   };
 
-  const [showSuccess, setShowSuccess] = useState(false);
   const [bank, setBank] = useState<BankType>("inter");
   const [transactions, setTransactions] = useState<Transaction[]>([
     { id: "1", name: "", value: "", category: "Sem categoria", time: getBrasiliaTime() },
@@ -474,7 +472,6 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
       link.download = `extrato-${bank}.png`;
       link.href = canvas.toDataURL();
       link.click();
-      setShowSuccess(true);
     } finally {
       setExporting(false);
     }
@@ -524,7 +521,6 @@ const ExtratoGenerator = ({ showComprovante = false, showObs = false }: { showCo
 
   return (
     <div className="bg-background flex items-start justify-center px-4 py-6 gap-6 flex-wrap lg:flex-nowrap max-w-6xl mx-auto">
-      <SuccessOverlay visible={showSuccess} onDone={() => setShowSuccess(false)} />
       {/* Form */}
       <div className="w-full max-w-lg">
         {/* Form Card */}
